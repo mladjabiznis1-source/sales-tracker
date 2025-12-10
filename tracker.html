@@ -384,13 +384,9 @@
         let cashChart, dealsChart, paymentTypesChart;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Default dates: 1 year range
-            const today = new Date();
-            const yearAgo = new Date(today);
-            yearAgo.setFullYear(yearAgo.getFullYear() - 1);
-            
-            document.getElementById('startDate').value = yearAgo.toISOString().split('T')[0];
-            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            // Default dates: leave empty to show all data
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
 
             document.getElementById('startDate').addEventListener('change', applyFilters);
             document.getElementById('endDate').addEventListener('change', applyFilters);
