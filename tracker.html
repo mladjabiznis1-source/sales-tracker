@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Tracker | Media 42</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filters input, .filters select {
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #7C3AED;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        /* Grid Layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        /* Scoreboard Table */
+        .scoreboard table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .scoreboard th, .scoreboard td {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .scoreboard th {
+            color: #888;
+            font-weight: 500;
+            border-bottom: 1px solid #222;
+        }
+
+        .scoreboard td {
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .scoreboard tr:hover {
+            background: #1a1a1a;
+        }
+
+        /* Charts */
+        .chart-container {
+            height: 200px;
+            position: relative;
+        }
+
+        /* Payments Table */
+        .payments-section {
+            margin-top: 16px;
+        }
+
+        .payments-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .payments-table th, .payments-table td {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid #222;
+        }
+
+        .payments-table th {
+            color: #888;
+            font-weight: 500;
+            background: #0f0f0f;
+        }
+
+        .payments-table tr:hover {
+            background: #1a1a1a;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #555;
+            padding: 40px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #222;
+            font-size: 11px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 EOD Tracker | Media 42</h1>
+            <div class="filters">
+                <input type="date" id="startDate">
+                <span style="color:#555">to</span>
+                <input type="date" id="endDate">
+                <select id="closerFilter">
+                    <option value="">All Closers</option>
+                </select>
+                <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+            </div>
+        </div>
+
+        <!-- Row 1: Payment Types + Scoreboard -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">Payment Types</div>
+                <div class="chart-container">
+                    <canvas id="paymentTypesChart"></canvas>
+                </div>
+            </div>
+            <div class="card scoreboard">
+                <div class="card-title">🏆 Scoreboard (according to EOD reports)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Closer</th>
+                            <th>Show Ups</th>
+                            <th>Cash Collected</th>
+                            <th>Close Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboardBody">
+                        <tr><td colspan="4" class="no-data">No data</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Row 2: Cash Collected Chart + Closed Deals Chart -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+                    <span style="width:12px;height:12px;background:#F59E0B;border-radius:2px;"></span>
+                    Cash Collected
+                </div>
+                <div class="chart-container">
+                    <canvas id="cashChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="display:flex;align-items:center;gap:16px;">
+                    <span style="display:flex;align-items:center;gap:4px;">
+                        <span style="width:12px;height:2px;background:#8B5CF6;"></span> Closed Deals
+                    </span>
+                    <span style="display:flex;align-items:center;gap:4px;">
+                        <span style="width:12px;height:12px;background:#3B82F6;border-radius:2px;"></span> Show Ups
+                    </span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dealsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Table -->
+        <div class="card payments-section">
+            <div class="card-title">Payments</div>
+            <table class="payments-table">
+                <thead>
+                    <tr>
+                        <th>Call Date ▼</th>
+                        <th>Lead Email</th>
+                        <th>Closer</th>
+                        <th>Setter (if applicable)</th>
+                        <th>Payment Type</th>
+                        <th>Cash Collected</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsBody">
+                    <tr><td colspan="6" class="no-data">No data</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <span>Data Last Updated: <span id="lastUpdated">-</span></span>
+            <span>Privacy Policy</span>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://sales-tracker-jsnv.onrender.com';
+        let allData = [];
+        let cashChart, dealsChart, paymentTypesChart;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Default dates: 1 year range
+            const today = new Date();
+            const yearAgo = new Date(today);
+            yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+            
+            document.getElementById('startDate').value = yearAgo.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
+            document.getElementById('closerFilter').addEventListener('change', applyFilters);
+
+            initCharts();
+            loadData();
+        });
+
+        function initCharts() {
+            // Payment Types Pie Chart
+            const ptCtx = document.getElementById('paymentTypesChart').getContext('2d');
+            paymentTypesChart = new Chart(ptCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: ['#F59E0B', '#3B82F6', '#10B981', '#EF4444', '#8B5CF6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#888', font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+
+            // Cash Collected Bar Chart
+            const cashCtx = document.getElementById('cashChart').getContext('2d');
+            cashChart = new Chart(cashCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Cash Collected',
+                        data: [],
+                        backgroundColor: '#F59E0B',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#222' }, ticks: { color: '#666' } },
+                        y: { grid: { color: '#222' }, ticks: { color: '#666' } }
+                    }
+                }
+            });
+
+            // Closed Deals / Show Ups Line Chart
+            const dealsCtx = document.getElementById('dealsChart').getContext('2d');
+            dealsChart = new Chart(dealsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Closed Deals',
+                            data: [],
+                            borderColor: '#8B5CF6',
+                            backgroundColor: 'transparent',
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Show Ups',
+                            data: [],
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#222' }, ticks: { color: '#666' } },
+                        y: { grid: { color: '#222' }, ticks: { color: '#666' } }
+                    }
+                }
+            });
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/forms/entries`);
+                if (response.ok) {
+                    const data = await response.json();
+                    allData = data.entries || [];
+                    populateCloserFilter();
+                    applyFilters();
+                    document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function populateCloserFilter() {
+            const closers = new Set();
+            allData.forEach(e => {
+                if (e.closerName) closers.add(e.closerName);
+            });
+            
+            const select = document.getElementById('closerFilter');
+            select.innerHTML = '<option value="">All Closers</option>';
+            [...closers].sort().forEach(name => {
+                select.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+        }
+
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const closerFilter = document.getElementById('closerFilter').value;
+
+            let filtered = allData.filter(entry => {
+                const entryDate = entry.callDate || '';
+                if (startDate && entryDate < startDate) return false;
+                if (endDate && entryDate > endDate) return false;
+                if (closerFilter && entry.closerName !== closerFilter) return false;
+                return true;
+            });
+
+            renderAll(filtered);
+        }
+
+        function renderAll(data) {
+            renderScoreboard(data);
+            renderPaymentTypes(data);
+            renderCashChart(data);
+            renderDealsChart(data);
+            renderPaymentsTable(data);
+        }
+
+        function renderScoreboard(data) {
+            // Group by closer
+            const closerStats = {};
+            data.forEach(e => {
+                const closer = e.closerName || 'Unknown';
+                if (!closerStats[closer]) {
+                    closerStats[closer] = { showUps: 0, cash: 0, closed: 0, liveCalls: 0 };
+                }
+                closerStats[closer].showUps += parseInt(e.liveCalls) || 0;
+                closerStats[closer].cash += parseFloat(e.cashCollected) || 0;
+                closerStats[closer].liveCalls += parseInt(e.liveCalls) || 0;
+                if (e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')) {
+                    closerStats[closer].closed++;
+                }
+            });
+
+            const rows = Object.entries(closerStats)
+                .sort((a, b) => b[1].cash - a[1].cash)
+                .map(([name, stats]) => {
+                    const closeRate = stats.liveCalls > 0 ? ((stats.closed / stats.liveCalls) * 100).toFixed(0) : 0;
+                    return `
+                        <tr>
+                            <td>${name}</td>
+                            <td>${stats.showUps}</td>
+                            <td>$${stats.cash.toLocaleString()}</td>
+                            <td>${closeRate}%</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            document.getElementById('scoreboardBody').innerHTML = rows || '<tr><td colspan="4" class="no-data">No data</td></tr>';
+        }
+
+        function renderPaymentTypes(data) {
+            // Count by offer made or outcome
+            const types = {};
+            data.forEach(e => {
+                if (e.cashCollected > 0) {
+                    const type = e.offerMade === 'Yes' ? 'Offer Made' : 'No Offer';
+                    types[type] = (types[type] || 0) + 1;
+                }
+            });
+
+            paymentTypesChart.data.labels = Object.keys(types);
+            paymentTypesChart.data.datasets[0].data = Object.values(types);
+            paymentTypesChart.update();
+        }
+
+        function renderCashChart(data) {
+            // Group by date
+            const byDate = {};
+            data.forEach(e => {
+                const date = e.callDate || 'Unknown';
+                byDate[date] = (byDate[date] || 0) + (parseFloat(e.cashCollected) || 0);
+            });
+
+            const sorted = Object.entries(byDate).sort((a, b) => a[0].localeCompare(b[0]));
+            cashChart.data.labels = sorted.map(d => d[0]);
+            cashChart.data.datasets[0].data = sorted.map(d => d[1]);
+            cashChart.update();
+        }
+
+        function renderDealsChart(data) {
+            // Group by date
+            const byDate = {};
+            data.forEach(e => {
+                const date = e.callDate || 'Unknown';
+                if (!byDate[date]) byDate[date] = { closed: 0, showUps: 0 };
+                byDate[date].showUps += parseInt(e.liveCalls) || 0;
+                if (e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')) {
+                    byDate[date].closed++;
+                }
+            });
+
+            const sorted = Object.entries(byDate).sort((a, b) => a[0].localeCompare(b[0]));
+            dealsChart.data.labels = sorted.map(d => d[0]);
+            dealsChart.data.datasets[0].data = sorted.map(d => d[1].closed);
+            dealsChart.data.datasets[1].data = sorted.map(d => d[1].showUps);
+            dealsChart.update();
+        }
+
+        function renderPaymentsTable(data) {
+            // Only show entries with cash collected
+            const payments = data.filter(e => e.cashCollected > 0)
+                .sort((a, b) => (b.callDate || '').localeCompare(a.callDate || ''));
+
+            if (payments.length === 0) {
+                document.getElementById('paymentsBody').innerHTML = '<tr><td colspan="6" class="no-data">No data</td></tr>';
+                return;
+            }
+
+            document.getElementById('paymentsBody').innerHTML = payments.map(e => `
+                <tr>
+                    <td>${e.callDate || '-'}</td>
+                    <td>${e.prospectEmail || '-'}</td>
+                    <td>${e.closerName || '-'}</td>
+                    <td>${e.setterName || '-'}</td>
+                    <td>${e.offerMade === 'Yes' ? 'Offer Made' : '-'}</td>
+                    <td>$${parseFloat(e.cashCollected).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
