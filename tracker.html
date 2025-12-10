@@ -310,11 +310,13 @@
                             <th>Date</th>
                             <th>Dials</th>
                             <th>Pick Ups</th>
-                            <th>Appts Set</th>
+                            <th>DQ's</th>
+                            <th>Pitched</th>
+                            <th>Set</th>
                         </tr>
                     </thead>
                     <tbody id="setterScoreboardBody">
-                        <tr><td colspan="5" class="no-data">No data</td></tr>
+                        <tr><td colspan="7" class="no-data">No data</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -589,16 +591,22 @@
             const cashCollected = data.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0);
             const revenueGenerated = data.reduce((sum, e) => sum + (parseFloat(e.revenueGenerated) || 0), 0);
 
+            // Calculate rates for metrics
+            const closedWon = data.filter(e => e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')).length;
+            const pickUpRate = totalDials > 0 ? ((totalPickUps / totalDials) * 100).toFixed(1) : 0;
+            const setRate = totalApptsPitched > 0 ? ((totalApptsSet / totalApptsPitched) * 100).toFixed(1) : 0;
+            const closeRate = liveCalls > 0 ? ((closedWon / liveCalls) * 100).toFixed(1) : 0;
+
             document.getElementById('coreMetrics').innerHTML = `
                 <div class="metric-card">
                     <div class="metric-label">Total Dials</div>
                     <div class="metric-value">${totalDials}</div>
-                    <div class="metric-change positive">Setter</div>
+                    <div class="metric-change positive">↑ Setter</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Pick Ups</div>
                     <div class="metric-value">${totalPickUps}</div>
-                    <div class="metric-change positive">Setter</div>
+                    <div class="metric-change positive">${pickUpRate}% rate</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">DQ's</div>
@@ -613,22 +621,22 @@
                 <div class="metric-card">
                     <div class="metric-label">Appts Set</div>
                     <div class="metric-value">${totalApptsSet}</div>
-                    <div class="metric-change positive">Setter</div>
+                    <div class="metric-change positive">${setRate}% rate</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Live Calls</div>
                     <div class="metric-value">${liveCalls}</div>
-                    <div class="metric-change positive">Closer</div>
+                    <div class="metric-change positive">↑ Closer</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Cash Collected</div>
                     <div class="metric-value money">$${cashCollected.toLocaleString()}</div>
-                    <div class="metric-change positive">Closer</div>
+                    <div class="metric-change positive">↑ Closer</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Revenue Generated</div>
                     <div class="metric-value money">$${revenueGenerated.toLocaleString()}</div>
-                    <div class="metric-change positive">Closer</div>
+                    <div class="metric-change positive">↑ Closer</div>
                 </div>
             `;
         }
@@ -720,12 +728,14 @@
                             <td>${date}</td>
                             <td>${e.dials || 0}</td>
                             <td>${e.pickUps || 0}</td>
+                            <td>${e.dqs || 0}</td>
+                            <td>${e.apptsPitched || 0}</td>
                             <td>${e.apptsSet || 0}</td>
                         </tr>
                     `;
                 }).join('');
 
-            document.getElementById('setterScoreboardBody').innerHTML = setterRows || '<tr><td colspan="5" class="no-data">No setter data</td></tr>';
+            document.getElementById('setterScoreboardBody').innerHTML = setterRows || '<tr><td colspan="7" class="no-data">No setter data</td></tr>';
 
             // CLOSER SCOREBOARD - group by closer name
             const closerEntries = data.filter(e => e.role === 'Closer');
