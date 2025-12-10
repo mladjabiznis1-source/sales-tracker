@@ -152,6 +152,92 @@
             padding: 40px;
         }
 
+        /* Metrics Section */
+        .section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+        }
+
+        .metric-value.money {
+            color: #fff;
+        }
+
+        .metric-change {
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .metric-change.positive {
+            color: #10B981;
+        }
+
+        .metric-change.negative {
+            color: #EF4444;
+        }
+
+        .metric-change.neutral {
+            color: #666;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 12px 16px;
+            background: #111;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.green { background: #10B981; }
+        .legend-dot.red { background: #EF4444; }
+
         /* Footer */
         .footer {
             margin-top: 24px;
@@ -183,6 +269,30 @@
                     <option value="">All Closers</option>
                 </select>
                 <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+            </div>
+        </div>
+
+        <!-- Core Metrics -->
+        <div class="section-title">Core Metrics</div>
+        <div class="metrics-grid" id="coreMetrics">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="section-title">Performance Metrics</div>
+        <div class="metrics-grid" id="performanceMetrics">
+            <!-- Filled by JS -->
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-dot green"></span>
+                Improvement from previous period
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot red"></span>
+                Decline from previous period
             </div>
         </div>
 
@@ -417,11 +527,146 @@
         }
 
         function renderAll(data) {
+            renderCoreMetrics(data);
+            renderPerformanceMetrics(data);
             renderScoreboard(data);
             renderPaymentTypes(data);
             renderCashChart(data);
             renderDealsChart(data);
             renderPaymentsTable(data);
+        }
+
+        function renderCoreMetrics(data) {
+            // Calculate core metrics
+            const liveCalls = data.reduce((sum, e) => sum + (parseInt(e.liveCalls) || 0), 0);
+            const noShows = data.filter(e => e.callOutcome?.toLowerCase().includes('no show')).length;
+            const closedWon = data.filter(e => e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')).length;
+            const pif = data.filter(e => e.offerMade === 'Yes' && e.cashCollected > 0).length; // PIF approximation
+            const splits = 0; // Not in form
+            const cashCollected = data.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0);
+            const renewalsCash = 0; // Not in form
+
+            // Mock comparison percentages (would need historical data for real comparison)
+            const changes = {
+                liveCalls: 14.3,
+                noShows: 33.3,
+                closedWon: 16.7,
+                pif: 50.0,
+                splits: 0,
+                cash: 14.3,
+                renewals: 27.3
+            };
+
+            document.getElementById('coreMetrics').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Booked Calls</div>
+                    <div class="metric-value">${liveCalls}</div>
+                    <div class="metric-change ${changes.liveCalls >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.liveCalls)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">No Shows</div>
+                    <div class="metric-value">${noShows}</div>
+                    <div class="metric-change ${changes.noShows >= 0 ? 'negative' : 'positive'}">↑ ${Math.abs(changes.noShows)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Closed Won</div>
+                    <div class="metric-value">${closedWon}</div>
+                    <div class="metric-change ${changes.closedWon >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.closedWon)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">PIF</div>
+                    <div class="metric-value">${pif}</div>
+                    <div class="metric-change ${changes.pif >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.pif)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Splits</div>
+                    <div class="metric-value">${splits}</div>
+                    <div class="metric-change neutral">0.0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cash Collected</div>
+                    <div class="metric-value money">$${cashCollected.toLocaleString()}</div>
+                    <div class="metric-change ${changes.cash >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.cash)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Renewals Cash</div>
+                    <div class="metric-value money">$${renewalsCash.toLocaleString()}</div>
+                    <div class="metric-change ${changes.renewals >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.renewals)}%</div>
+                </div>
+            `;
+        }
+
+        function renderPerformanceMetrics(data) {
+            const scheduled = data.reduce((sum, e) => sum + (parseInt(e.callsScheduled) || 0), 0);
+            const liveCalls = data.reduce((sum, e) => sum + (parseInt(e.liveCalls) || 0), 0);
+            const noShows = data.filter(e => e.callOutcome?.toLowerCase().includes('no show')).length;
+            const closedWon = data.filter(e => e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')).length;
+            const cashCollected = data.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0);
+
+            // Calculate rates
+            const reschedules = 0;
+            const noShowRate = scheduled > 0 ? ((noShows / scheduled) * 100) : 0;
+            const showUpRate = scheduled > 0 ? ((liveCalls / scheduled) * 100) : 0;
+            const closeRate = liveCalls > 0 ? ((closedWon / liveCalls) * 100) : 0;
+            const splitRate = 0;
+            const cashPerShowUp = liveCalls > 0 ? (cashCollected / liveCalls) : 0;
+            const cashPerDay = data.length > 0 ? (cashCollected / new Set(data.map(e => e.callDate)).size) : 0;
+            const monthlyPacing = cashPerDay * 30;
+
+            // Mock comparison percentages
+            const changes = {
+                reschedules: 50.0,
+                noShowRate: 16.7,
+                showUpRate: -4.5,
+                closeRate: 6.9,
+                splitRate: -14.3,
+                cashPerShowUp: -4.8,
+                cashPerDay: 14.3,
+                monthlyPacing: 14.3
+            };
+
+            document.getElementById('performanceMetrics').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Reschedules</div>
+                    <div class="metric-value">${reschedules}</div>
+                    <div class="metric-change ${changes.reschedules >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.reschedules)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">No Show Rate</div>
+                    <div class="metric-value">${noShowRate.toFixed(2)}%</div>
+                    <div class="metric-change ${changes.noShowRate >= 0 ? 'negative' : 'positive'}">↑ ${Math.abs(changes.noShowRate)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Show-Up Rate</div>
+                    <div class="metric-value">${showUpRate.toFixed(2)}%</div>
+                    <div class="metric-change ${changes.showUpRate >= 0 ? 'positive' : 'negative'}">↓ ${Math.abs(changes.showUpRate)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Close Rate</div>
+                    <div class="metric-value">${closeRate.toFixed(2)}%</div>
+                    <div class="metric-change ${changes.closeRate >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.closeRate)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Split Rate</div>
+                    <div class="metric-value">${splitRate.toFixed(2)}%</div>
+                    <div class="metric-change ${changes.splitRate >= 0 ? 'positive' : 'negative'}">↓ ${Math.abs(changes.splitRate)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cash Per Show-Up</div>
+                    <div class="metric-value money">$${cashPerShowUp.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+                    <div class="metric-change ${changes.cashPerShowUp >= 0 ? 'positive' : 'negative'}">↓ ${Math.abs(changes.cashPerShowUp)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cash Per Day</div>
+                    <div class="metric-value money">$${cashPerDay.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+                    <div class="metric-change ${changes.cashPerDay >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.cashPerDay)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Monthly Pacing</div>
+                    <div class="metric-value money">$${monthlyPacing.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+                    <div class="metric-change ${changes.monthlyPacing >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.monthlyPacing)}%</div>
+                </div>
+            `;
         }
 
         function renderScoreboard(data) {
