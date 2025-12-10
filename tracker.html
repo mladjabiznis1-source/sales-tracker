@@ -299,16 +299,27 @@
             </div>
         </div>
 
-        <!-- Row 1: Payment Types + Scoreboard -->
+        <!-- Row 1: Setter Scoreboard + Closer Scoreboard -->
         <div class="grid-2">
-            <div class="card">
-                <div class="card-title">Payment Types</div>
-                <div class="chart-container">
-                    <canvas id="paymentTypesChart"></canvas>
-                </div>
+            <div class="card scoreboard">
+                <div class="card-title">📞 Setter Scoreboard</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Setter</th>
+                            <th>Date</th>
+                            <th>Dials</th>
+                            <th>Pick Ups</th>
+                            <th>Appts Set</th>
+                        </tr>
+                    </thead>
+                    <tbody id="setterScoreboardBody">
+                        <tr><td colspan="5" class="no-data">No data</td></tr>
+                    </tbody>
+                </table>
             </div>
             <div class="card scoreboard">
-                <div class="card-title">🏆 Scoreboard (according to EOD reports)</div>
+                <div class="card-title">🏆 Closer Scoreboard</div>
                 <table>
                     <thead>
                         <tr>
@@ -325,8 +336,14 @@
             </div>
         </div>
 
-        <!-- Row 2: Cash Collected Chart + Closed Deals Chart -->
+        <!-- Row 2: Payment Types + Charts -->
         <div class="grid-2">
+            <div class="card">
+                <div class="card-title">Payment Types</div>
+                <div class="chart-container">
+                    <canvas id="paymentTypesChart"></canvas>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-title" style="display:flex;align-items:center;gap:8px;">
                     <span style="width:12px;height:12px;background:#F59E0B;border-radius:2px;"></span>
@@ -336,6 +353,10 @@
                     <canvas id="cashChart"></canvas>
                 </div>
             </div>
+        </div>
+
+        <!-- Row 3: Closed Deals Chart -->
+        <div class="grid-2">
             <div class="card">
                 <div class="card-title" style="display:flex;align-items:center;gap:16px;">
                     <span style="display:flex;align-items:center;gap:4px;">
@@ -347,6 +368,12 @@
                 </div>
                 <div class="chart-container">
                     <canvas id="dealsChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📊 Submissions by Date</div>
+                <div class="chart-container">
+                    <canvas id="submissionsChart"></canvas>
                 </div>
             </div>
         </div>
@@ -680,9 +707,30 @@
         }
 
         function renderScoreboard(data) {
-            // Group by closer
+            // SETTER SCOREBOARD - show individual setter entries
+            const setterEntries = data.filter(e => e.role === 'Setter');
+            const setterRows = setterEntries
+                .sort((a, b) => (b.callDate || b.timestamp || '').localeCompare(a.callDate || a.timestamp || ''))
+                .map(e => {
+                    const name = e.setterName || 'Unknown';
+                    const date = e.callDate || (e.timestamp ? e.timestamp.split('T')[0] : '-');
+                    return `
+                        <tr>
+                            <td>${name}</td>
+                            <td>${date}</td>
+                            <td>${e.dials || 0}</td>
+                            <td>${e.pickUps || 0}</td>
+                            <td>${e.apptsSet || 0}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            document.getElementById('setterScoreboardBody').innerHTML = setterRows || '<tr><td colspan="5" class="no-data">No setter data</td></tr>';
+
+            // CLOSER SCOREBOARD - group by closer name
+            const closerEntries = data.filter(e => e.role === 'Closer');
             const closerStats = {};
-            data.forEach(e => {
+            closerEntries.forEach(e => {
                 const closer = e.closerName || 'Unknown';
                 if (!closerStats[closer]) {
                     closerStats[closer] = { showUps: 0, cash: 0, closed: 0, liveCalls: 0 };
@@ -695,7 +743,7 @@
                 }
             });
 
-            const rows = Object.entries(closerStats)
+            const closerRows = Object.entries(closerStats)
                 .sort((a, b) => b[1].cash - a[1].cash)
                 .map(([name, stats]) => {
                     const closeRate = stats.liveCalls > 0 ? ((stats.closed / stats.liveCalls) * 100).toFixed(0) : 0;
@@ -709,7 +757,7 @@
                     `;
                 }).join('');
 
-            document.getElementById('scoreboardBody').innerHTML = rows || '<tr><td colspan="4" class="no-data">No data</td></tr>';
+            document.getElementById('scoreboardBody').innerHTML = closerRows || '<tr><td colspan="4" class="no-data">No closer data</td></tr>';
         }
 
         function renderPaymentTypes(data) {
