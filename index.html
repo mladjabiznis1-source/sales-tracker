@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Performance Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0D0D0D;
+            color: #FFFFFF;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: #666666;
+        }
+
+        .refresh-btn {
+            background: #1A1A1A;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #FFFFFF;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            border-color: #00D4AA;
+            background: #252525;
+        }
+
+        .refresh-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .refresh-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .refresh-btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .filter {
+            background: #1A1A1A;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #FFFFFF;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: border-color 0.2s;
+        }
+
+        .filter:hover {
+            border-color: #00D4AA;
+        }
+
+        .filter svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+        }
+
+        select.filter {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        input[type="date"].filter {
+            color-scheme: dark;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #888888;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .scorecard {
+            background: #1E1E1E;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 120px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .scorecard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .scorecard-label {
+            font-size: 12px;
+            color: #888888;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .scorecard-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+        }
+
+        .scorecard-comparison {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .comparison-positive {
+            color: #00D4AA;
+        }
+
+        .comparison-negative {
+            color: #FF6B6B;
+        }
+
+        .comparison-neutral {
+            color: #888888;
+        }
+
+        .arrow {
+            font-size: 12px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #333;
+            margin: 16px 0 32px 0;
+        }
+
+        .legend {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+            padding: 16px;
+            background: #1A1A1A;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #888888;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.green {
+            background: #00D4AA;
+        }
+
+        .legend-dot.red {
+            background: #FF6B6B;
+        }
+
+        .setup-banner {
+            background: linear-gradient(135deg, #1A1A1A 0%, #252525 100%);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .setup-banner h2 {
+            color: #00D4AA;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .setup-banner p {
+            color: #AAAAAA;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .setup-banner input {
+            width: 100%;
+            background: #0D0D0D;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #FFFFFF;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .setup-banner input:focus {
+            outline: none;
+            border-color: #00D4AA;
+        }
+
+        .setup-banner button {
+            background: #00D4AA;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: #0D0D0D;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .setup-banner button:hover {
+            background: #00B894;
+        }
+
+        .setup-banner .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+        }
+
+        .error-message {
+            background: #2D1F1F;
+            border: 1px solid #FF6B6B;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #FF6B6B;
+            font-size: 14px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 13, 13, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid #333;
+            border-top-color: #00D4AA;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .scorecard-value {
+                font-size: 24px;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="dashboard">
+        <div class="header">
+            <h1>Sales Performance Tracker</h1>
+            <div class="header-right">
+                <span class="last-updated" id="lastUpdated">Not connected</span>
+                <button class="refresh-btn" id="refreshBtn" onclick="loadLocalData()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                </button>
+                <a href="entry.html" class="refresh-btn" style="text-decoration: none; background: #00D4AA; border-color: #00D4AA; color: #0D0D0D; font-weight: 600;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Data Entry
+                </a>
+            </div>
+        </div>
+
+        <!-- Setup Banner -->
+        <div id="setupBanner" class="setup-banner">
+            <h2>📊 No Data Yet</h2>
+            <p>Start by adding your sales data using the Data Entry page.</p>
+            <div style="display: flex; gap: 12px; margin-top: 16px;">
+                <a href="entry.html" style="background: #00D4AA; border: none; border-radius: 8px; padding: 12px 24px; color: #0D0D0D; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add Data
+                </a>
+                <button onclick="loadDemoData()" style="background: #333; border: 1px solid #444; border-radius: 8px; padding: 12px 24px; color: #fff; font-size: 14px; cursor: pointer;">Try Demo Data</button>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboardContent" class="hidden">
+            <div class="filters">
+                <div class="filter">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <input type="date" id="startDate" class="filter" style="border: none; background: transparent;">
+                    <span>to</span>
+                    <input type="date" id="endDate" class="filter" style="border: none; background: transparent;">
+                </div>
+                <select id="roleFilter" class="filter" onchange="applyFilters()">
+                    <option value="all">All Roles</option>
+                    <option value="Closer">Closer</option>
+                    <option value="Setter">Setter</option>
+                    <option value="PCF">PCF</option>
+                </select>
+            </div>
+
+            <div class="section-title">Core Metrics</div>
+            <div class="metrics-row">
+                <div class="scorecard" id="card-bookedCalls">
+                    <div class="scorecard-label">Booked Calls</div>
+                    <div class="scorecard-value" id="val-bookedCalls">-</div>
+                    <div class="scorecard-comparison" id="cmp-bookedCalls">-</div>
+                </div>
+
+                <div class="scorecard" id="card-noShows">
+                    <div class="scorecard-label">No Shows</div>
+                    <div class="scorecard-value" id="val-noShows">-</div>
+                    <div class="scorecard-comparison" id="cmp-noShows">-</div>
+                </div>
+
+                <div class="scorecard" id="card-closedWon">
+                    <div class="scorecard-label">Closed Won</div>
+                    <div class="scorecard-value" id="val-closedWon">-</div>
+                    <div class="scorecard-comparison" id="cmp-closedWon">-</div>
+                </div>
+
+                <div class="scorecard" id="card-pif">
+                    <div class="scorecard-label">PIF</div>
+                    <div class="scorecard-value" id="val-pif">-</div>
+                    <div class="scorecard-comparison" id="cmp-pif">-</div>
+                </div>
+
+                <div class="scorecard" id="card-splits">
+                    <div class="scorecard-label">Splits</div>
+                    <div class="scorecard-value" id="val-splits">-</div>
+                    <div class="scorecard-comparison" id="cmp-splits">-</div>
+                </div>
+
+                <div class="scorecard" id="card-cashCollected">
+                    <div class="scorecard-label">Cash Collected</div>
+                    <div class="scorecard-value" id="val-cashCollected">-</div>
+                    <div class="scorecard-comparison" id="cmp-cashCollected">-</div>
+                </div>
+
+                <div class="scorecard" id="card-renewalsCash">
+                    <div class="scorecard-label">Renewals Cash</div>
+                    <div class="scorecard-value" id="val-renewalsCash">-</div>
+                    <div class="scorecard-comparison" id="cmp-renewalsCash">-</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section-title">Performance Metrics</div>
+            <div class="metrics-row">
+                <div class="scorecard" id="card-reschedules">
+                    <div class="scorecard-label">Reschedules</div>
+                    <div class="scorecard-value" id="val-reschedules">-</div>
+                    <div class="scorecard-comparison" id="cmp-reschedules">-</div>
+                </div>
+
+                <div class="scorecard" id="card-noShowRate">
+                    <div class="scorecard-label">No Show Rate</div>
+                    <div class="scorecard-value" id="val-noShowRate">-</div>
+                    <div class="scorecard-comparison" id="cmp-noShowRate">-</div>
+                </div>
+
+                <div class="scorecard" id="card-showUpRate">
+                    <div class="scorecard-label">Show-Up Rate</div>
+                    <div class="scorecard-value" id="val-showUpRate">-</div>
+                    <div class="scorecard-comparison" id="cmp-showUpRate">-</div>
+                </div>
+
+                <div class="scorecard" id="card-closeRate">
+                    <div class="scorecard-label">Close Rate</div>
+                    <div class="scorecard-value" id="val-closeRate">-</div>
+                    <div class="scorecard-comparison" id="cmp-closeRate">-</div>
+                </div>
+
+                <div class="scorecard" id="card-splitRate">
+                    <div class="scorecard-label">Split Rate</div>
+                    <div class="scorecard-value" id="val-splitRate">-</div>
+                    <div class="scorecard-comparison" id="cmp-splitRate">-</div>
+                </div>
+
+                <div class="scorecard" id="card-cashPerShowUp">
+                    <div class="scorecard-label">Cash Per Show-Up</div>
+                    <div class="scorecard-value" id="val-cashPerShowUp">-</div>
+                    <div class="scorecard-comparison" id="cmp-cashPerShowUp">-</div>
+                </div>
+
+                <div class="scorecard" id="card-cashPerDay">
+                    <div class="scorecard-label">Cash Per Day</div>
+                    <div class="scorecard-value" id="val-cashPerDay">-</div>
+                    <div class="scorecard-comparison" id="cmp-cashPerDay">-</div>
+                </div>
+
+                <div class="scorecard" id="card-monthlyPacing">
+                    <div class="scorecard-label">Monthly Pacing</div>
+                    <div class="scorecard-value" id="val-monthlyPacing">-</div>
+                    <div class="scorecard-comparison" id="cmp-monthlyPacing">-</div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot green"></div>
+                    <span>Improvement from previous period</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot red"></div>
+                    <span>Decline from previous period</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        let rawData = [];
+        let autoRefreshInterval = null;
+        const AUTO_REFRESH_SECONDS = 5; // Refresh every 5 seconds for local data
+        const API_BASE_URL = 'http://localhost:3000'; // Server URL for Google Form data
+        
+        // Metrics that should have inverted colors (lower is better)
+        const invertedMetrics = ['noShows', 'noShowRate', 'reschedules'];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default date range (last 7 days)
+            const today = new Date();
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            document.getElementById('endDate').value = formatDate(today);
+            document.getElementById('startDate').value = formatDate(weekAgo);
+            
+            // Add date change listeners
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
+            
+            // Load data from local storage
+            loadLocalData();
+        });
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        async function loadLocalData() {
+            // First, try to load from server (includes Google Form submissions)
+            let serverEntries = [];
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/webhook/entries`);
+                if (response.ok) {
+                    const data = await response.json();
+                    serverEntries = data.entries || [];
+                }
+            } catch (error) {
+                console.log('Server not available, using local data only');
+            }
+            
+            // Also get local entries
+            const localEntries = JSON.parse(localStorage.getItem('salesEntries')) || [];
+            
+            // Combine both sources
+            const allEntries = [...serverEntries, ...localEntries];
+            
+            if (allEntries.length === 0) {
+                document.getElementById('setupBanner').classList.remove('hidden');
+                document.getElementById('dashboardContent').classList.add('hidden');
+                return;
+            }
+            
+            // Convert all entries to rawData format
+            rawData = allEntries.map(e => ({
+                'Date': e.date,
+                'Role': e.role,
+                'Booked Calls': e.bookedCalls || e['Booked Calls'] || 0,
+                'No Shows': e.noShows || e['No Shows'] || 0,
+                'Closed Won': e.closedWon || e['Closed Won'] || 0,
+                'PIF': e.pif || e['PIF'] || 0,
+                'Splits': e.splits || e['Splits'] || 0,
+                'Cash Collected': e.cashCollected || e['Cash Collected'] || 0,
+                'Renewals Cash Collected': e.renewalsCash || e['Renewals Cash Collected'] || 0,
+                'Reschedules': e.reschedules || e['Reschedules'] || 0
+            }));
+            
+            // Set date range to most recent 7 days of data (or less if not enough data)
+            const dates = [...new Set(rawData.map(r => r['Date']).filter(d => d))].sort();
+            if (dates.length > 0) {
+                const maxDate = dates[dates.length - 1];
+                // Get last 7 unique days or half the data (whichever is smaller) so there's comparison data
+                const daysToShow = Math.min(7, Math.floor(dates.length / 2)) || 1;
+                const startIdx = Math.max(0, dates.length - daysToShow);
+                const minDate = dates[startIdx];
+                document.getElementById('startDate').value = minDate;
+                document.getElementById('endDate').value = maxDate;
+            }
+            
+            document.getElementById('setupBanner').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.remove('hidden');
+            const sourceInfo = serverEntries.length > 0 ? ' (incl. Google Form data)' : '';
+            document.getElementById('lastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()}${sourceInfo}`;
+            
+            applyFilters();
+            startAutoRefresh();
+        }
+
+        function connectSheet() {
+            const url = document.getElementById('sheetUrl').value.trim();
+            if (!url) {
+                showError('Please enter a Google Sheet URL');
+                return;
+            }
+            
+            sheetUrl = url;
+            localStorage.setItem('salesTrackerSheetUrl', url);
+            fetchData();
+        }
+
+        async function fetchData() {
+            if (!sheetUrl) return;
+            
+            showLoading(true);
+            hideError();
+            
+            try {
+                // Try direct fetch first, then CORS proxy if blocked
+                let response;
+                try {
+                    response = await fetch(sheetUrl);
+                } catch (corsError) {
+                    // Use CORS proxy as fallback
+                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(sheetUrl);
+                    response = await fetch(proxyUrl);
+                }
+                if (!response.ok) throw new Error('Failed to fetch data');
+                
+                const csvText = await response.text();
+                rawData = parseCSV(csvText);
+                
+                if (rawData.length === 0) {
+                    throw new Error('No data found in sheet');
+                }
+                
+                document.getElementById('setupBanner').classList.add('hidden');
+                document.getElementById('dashboardContent').classList.remove('hidden');
+                document.getElementById('lastUpdated').textContent = `Updated: ${new Date().toLocaleTimeString()} (auto-refresh: ${AUTO_REFRESH_SECONDS}s)`;
+                
+                applyFilters();
+                
+                // Start auto-refresh
+                startAutoRefresh();
+            } catch (error) {
+                showError(`Error loading data: ${error.message}. Make sure your sheet is published to web as CSV.`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            return lines.slice(1).map(line => {
+                const values = parseCSVLine(line);
+                const row = {};
+                headers.forEach((header, i) => {
+                    let value = values[i]?.trim() || '';
+                    
+                    // Clean currency values: remove $, commas
+                    if (header.includes('Cash') || header.includes('Currency')) {
+                        value = value.replace(/[$,]/g, '');
+                    }
+                    
+                    // Convert date format from M/D/YYYY to YYYY-MM-DD
+                    if (header === 'Date' && value.includes('/')) {
+                        const parts = value.split('/');
+                        if (parts.length === 3) {
+                            const month = parts[0].padStart(2, '0');
+                            const day = parts[1].padStart(2, '0');
+                            const year = parts[2];
+                            value = `${year}-${month}-${day}`;
+                        }
+                    }
+                    
+                    row[header] = value;
+                });
+                return row;
+            });
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let char of line) {
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const role = document.getElementById('roleFilter').value;
+            
+            // Filter current period
+            const currentData = rawData.filter(row => {
+                const date = row['Date'];
+                const matchesDate = (!startDate || date >= startDate) && (!endDate || date <= endDate);
+                const matchesRole = role === 'all' || row['Role'] === role;
+                return matchesDate && matchesRole;
+            });
+            
+            // Calculate previous period (same duration, immediately before)
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const duration = end - start;
+            const prevEnd = new Date(start);
+            prevEnd.setDate(prevEnd.getDate() - 1);
+            const prevStart = new Date(prevEnd - duration);
+            
+            const prevData = rawData.filter(row => {
+                const date = row['Date'];
+                const matchesDate = date >= formatDate(prevStart) && date <= formatDate(prevEnd);
+                const matchesRole = role === 'all' || row['Role'] === role;
+                return matchesDate && matchesRole;
+            });
+            
+            // Calculate metrics
+            const currentMetrics = calculateMetrics(currentData);
+            const prevMetrics = calculateMetrics(prevData);
+            
+            // Update display
+            updateDisplay(currentMetrics, prevMetrics);
+        }
+
+        function calculateMetrics(data) {
+            const sum = (field) => data.reduce((acc, row) => acc + (parseFloat(row[field]) || 0), 0);
+            const uniqueDays = new Set(data.map(row => row['Date'])).size;
+            
+            const bookedCalls = sum('Booked Calls');
+            const noShows = sum('No Shows');
+            const closedWon = sum('Closed Won');
+            const pif = sum('PIF');
+            const splits = sum('Splits');
+            const cashCollected = sum('Cash Collected');
+            const renewalsCash = sum('Renewals Cash Collected');
+            const reschedules = sum('Reschedules');
+            
+            const showUps = bookedCalls - noShows;
+            
+            return {
+                bookedCalls,
+                noShows,
+                closedWon,
+                pif,
+                splits,
+                cashCollected,
+                renewalsCash,
+                reschedules,
+                noShowRate: bookedCalls > 0 ? noShows / bookedCalls : 0,
+                showUpRate: bookedCalls > 0 ? 1 - (noShows / bookedCalls) : 0,
+                closeRate: showUps > 0 ? closedWon / showUps : 0,
+                splitRate: closedWon > 0 ? splits / closedWon : 0,
+                cashPerShowUp: showUps > 0 ? cashCollected / showUps : 0,
+                cashPerDay: uniqueDays > 0 ? cashCollected / uniqueDays : 0,
+                monthlyPacing: uniqueDays > 0 ? (cashCollected / uniqueDays) * 30 : 0
+            };
+        }
+
+        function updateDisplay(current, previous) {
+            // Core metrics
+            updateCard('bookedCalls', current.bookedCalls, previous.bookedCalls, formatNumber);
+            updateCard('noShows', current.noShows, previous.noShows, formatNumber);
+            updateCard('closedWon', current.closedWon, previous.closedWon, formatNumber);
+            updateCard('pif', current.pif, previous.pif, formatNumber);
+            updateCard('splits', current.splits, previous.splits, formatNumber);
+            updateCard('cashCollected', current.cashCollected, previous.cashCollected, formatCurrency);
+            updateCard('renewalsCash', current.renewalsCash, previous.renewalsCash, formatCurrency);
+            
+            // Performance metrics
+            updateCard('reschedules', current.reschedules, previous.reschedules, formatNumber);
+            updateCard('noShowRate', current.noShowRate, previous.noShowRate, formatPercent);
+            updateCard('showUpRate', current.showUpRate, previous.showUpRate, formatPercent);
+            updateCard('closeRate', current.closeRate, previous.closeRate, formatPercent);
+            updateCard('splitRate', current.splitRate, previous.splitRate, formatPercent);
+            updateCard('cashPerShowUp', current.cashPerShowUp, previous.cashPerShowUp, formatCurrency);
+            updateCard('cashPerDay', current.cashPerDay, previous.cashPerDay, formatCurrency);
+            updateCard('monthlyPacing', current.monthlyPacing, previous.monthlyPacing, formatCurrency);
+        }
+
+        function updateCard(metricId, currentValue, previousValue, formatter) {
+            const valueEl = document.getElementById(`val-${metricId}`);
+            const compEl = document.getElementById(`cmp-${metricId}`);
+            
+            valueEl.textContent = formatter(currentValue);
+            
+            // Hide comparison if no prior data
+            if (previousValue === 0) {
+                compEl.innerHTML = '<span class="comparison-neutral" style="font-size:12px;color:#555;">—</span>';
+                return;
+            }
+            
+            const change = ((currentValue - previousValue) / previousValue) * 100;
+            
+            const isInverted = invertedMetrics.includes(metricId);
+            const isPositive = isInverted ? change < 0 : change > 0;
+            const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '';
+            const colorClass = change === 0 ? 'comparison-neutral' : (isPositive ? 'comparison-positive' : 'comparison-negative');
+            
+            compEl.innerHTML = `<span class="${colorClass}"><span class="arrow">${arrow}</span> ${Math.abs(change).toFixed(1)}%</span>`;
+        }
+
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString();
+        }
+
+        function formatCurrency(num) {
+            return '$' + Math.round(num).toLocaleString();
+        }
+
+        function formatPercent(num) {
+            return (num * 100).toFixed(2) + '%';
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+            document.getElementById('refreshBtn').classList.toggle('loading', show);
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+
+        function disconnect() {
+            // Stop auto-refresh
+            stopAutoRefresh();
+            
+            // Clear data
+            rawData = [];
+            
+            // Show setup banner, hide dashboard
+            document.getElementById('setupBanner').classList.remove('hidden');
+            document.getElementById('dashboardContent').classList.add('hidden');
+            document.getElementById('lastUpdated').textContent = 'Not connected';
+            hideError();
+        }
+
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing interval
+            autoRefreshInterval = setInterval(() => {
+                loadLocalData();
+            }, AUTO_REFRESH_SECONDS * 1000);
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        function loadDemoData() {
+            // Demo data matching the CSV template
+            const demoCSV = `Date,Role,Booked Calls,No Shows,Closed Won,PIF,Splits,Cash Collected,Renewals Cash Collected,Reschedules
+2024-12-01,Closer,15,2,8,3,2,24500,3200,1
+2024-12-01,Setter,22,4,0,0,0,0,0,3
+2024-12-01,PCF,8,1,4,2,1,12000,1500,0
+2024-12-02,Closer,18,3,9,4,2,28000,4100,2
+2024-12-02,Setter,25,5,0,0,0,0,0,4
+2024-12-02,PCF,10,2,5,2,1,15500,2000,1
+2024-12-03,Closer,12,1,7,3,1,21500,2800,1
+2024-12-03,Setter,20,3,0,0,0,0,0,2
+2024-12-03,PCF,9,1,5,2,2,14000,1800,0
+2024-12-04,Closer,16,2,10,5,2,32000,4500,1
+2024-12-04,Setter,24,4,0,0,0,0,0,3
+2024-12-04,PCF,11,2,6,3,1,18500,2200,1
+2024-12-05,Closer,14,3,6,2,2,18000,2400,2
+2024-12-05,Setter,21,5,0,0,0,0,0,4
+2024-12-05,PCF,7,1,3,1,1,9500,1200,0
+2024-12-06,Closer,17,2,11,5,3,35000,5000,1
+2024-12-06,Setter,26,4,0,0,0,0,0,3
+2024-12-06,PCF,12,2,7,3,2,21000,2600,1
+2024-12-07,Closer,13,1,8,4,2,26000,3500,0
+2024-12-07,Setter,19,3,0,0,0,0,0,2
+2024-12-07,PCF,8,1,4,2,1,12500,1600,0
+2024-11-24,Closer,14,3,6,2,2,17500,2200,2
+2024-11-24,Setter,20,5,0,0,0,0,0,4
+2024-11-24,PCF,7,2,3,1,1,8500,1100,1
+2024-11-25,Closer,16,4,7,3,2,20000,2800,3
+2024-11-25,Setter,23,6,0,0,0,0,0,5
+2024-11-25,PCF,9,2,4,2,1,11500,1400,1
+2024-11-26,Closer,11,2,5,2,1,15000,2000,1
+2024-11-26,Setter,18,4,0,0,0,0,0,3
+2024-11-26,PCF,8,2,3,1,1,9000,1200,1
+2024-11-27,Closer,15,3,8,3,2,24000,3200,2
+2024-11-27,Setter,22,5,0,0,0,0,0,4
+2024-11-27,PCF,10,2,5,2,1,14500,1800,1
+2024-11-28,Closer,13,2,7,3,2,21500,2900,1
+2024-11-28,Setter,19,4,0,0,0,0,0,3
+2024-11-28,PCF,6,1,3,1,1,8000,1000,0
+2024-11-29,Closer,16,3,9,4,2,27500,3800,2
+2024-11-29,Setter,24,5,0,0,0,0,0,4
+2024-11-29,PCF,11,2,6,2,2,17000,2100,1
+2024-11-30,Closer,12,2,6,2,1,18500,2500,1
+2024-11-30,Setter,17,3,0,0,0,0,0,2
+2024-11-30,PCF,7,1,4,2,1,11000,1400,0`;
+
+            rawData = parseCSV(demoCSV);
+            
+            document.getElementById('setupBanner').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.remove('hidden');
+            document.getElementById('lastUpdated').textContent = 'Demo Data';
+            
+            // Set date range to Dec 1-7 for demo
+            document.getElementById('startDate').value = '2024-12-01';
+            document.getElementById('endDate').value = '2024-12-07';
+            
+            applyFilters();
+        }
+    </script>
+</body>
+</html>

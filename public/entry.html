@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<!-- v2.1 - PIF fix -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Data Entry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0D0D0D;
+            color: #FFFFFF;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            background: #1A1A1A;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: #FFFFFF;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            border-color: #00D4AA;
+            background: #252525;
+        }
+
+        .btn-primary {
+            background: #00D4AA;
+            border-color: #00D4AA;
+            color: #0D0D0D;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: #00B894;
+            border-color: #00B894;
+        }
+
+        .btn-danger {
+            border-color: #FF6B6B;
+        }
+
+        .btn-danger:hover {
+            background: #2D1F1F;
+            border-color: #FF6B6B;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Quick Entry Form */
+        .quick-entry {
+            background: #1A1A1A;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .quick-entry h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #00D4AA;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            background: #0D0D0D;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            color: #FFFFFF;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #00D4AA;
+        }
+
+        .form-group input[type="date"] {
+            color-scheme: dark;
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: #1A1A1A;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .table-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1400px;
+        }
+        
+        td input[type="number"] {
+            min-width: 60px;
+        }
+
+        th {
+            background: #252525;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #252525;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #252525;
+        }
+
+        .editable-cell {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 8px;
+            color: #FFFFFF;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .editable-cell:hover {
+            border-color: #333;
+        }
+
+        .editable-cell:focus {
+            outline: none;
+            border-color: #00D4AA;
+            background: #0D0D0D;
+        }
+
+        select.editable-cell {
+            cursor: pointer;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .row-btn {
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .row-btn:hover {
+            color: #FFFFFF;
+            background: #333;
+        }
+
+        .row-btn.delete:hover {
+            color: #FF6B6B;
+            background: #2D1F1F;
+        }
+
+        .row-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Status indicators */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-saved {
+            background: rgba(0, 212, 170, 0.1);
+            color: #00D4AA;
+        }
+
+        .status-unsaved {
+            background: rgba(255, 193, 7, 0.1);
+            color: #FFC107;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1E1E1E;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: #00D4AA;
+        }
+
+        .toast.error {
+            border-color: #FF6B6B;
+        }
+
+        /* Calculated fields highlight */
+        .calculated {
+            color: #00D4AA;
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Sales Data Entry</h1>
+            <div class="header-actions">
+                <span id="saveStatus" class="status-badge status-saved">
+                    <span class="status-dot"></span>
+                    All changes saved
+                </span>
+                <a href="index.html" class="btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    View Dashboard
+                </a>
+                <button class="btn btn-primary" onclick="exportToCSV()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Entry Form -->
+        <div class="quick-entry">
+            <h2>➕ Add New Entry</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="newDate">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="newRole">
+                        <option value="Closer">Closer</option>
+                        <option value="Setter">Setter</option>
+                        <option value="PCF">PCF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Booked Calls</label>
+                    <input type="number" id="newBookedCalls" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>No Shows</label>
+                    <input type="number" id="newNoShows" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Closed Won</label>
+                    <input type="number" id="newClosedWon" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Closed Lost</label>
+                    <input type="number" id="newClosedLost" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>PIF</label>
+                    <input type="number" id="newPIF" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Splits</label>
+                    <input type="number" id="newSplits" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Cash Collected</label>
+                    <input type="number" id="newCashCollected" value="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Renewals Cash</label>
+                    <input type="number" id="newRenewalsCash" value="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Reschedules</label>
+                    <input type="number" id="newReschedules" value="0" min="0">
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="addEntry()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Entry
+                    </button>
+                    <button class="btn" onclick="clearForm()">Clear</button>
+                    <button onclick="loadDemoData()" style="background: #333; color: #fff; margin-left: 8px;">Load Demo Data (2 weeks)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h2>📋 All Entries</h2>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <input type="text" id="searchInput" placeholder="Search..." 
+                           style="background: #0D0D0D; border: 1px solid #333; border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 14px;"
+                           oninput="renderTable()">
+                    <button class="btn btn-danger" onclick="clearAllData()">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Clear All
+                    </button>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Role</th>
+                            <th>Booked Calls</th>
+                            <th>No Shows</th>
+                            <th>Closed Won</th>
+                            <th>Closed Lost</th>
+                            <th>PIF</th>
+                            <th>Splits</th>
+                            <th>Cash Collected</th>
+                            <th>Renewals Cash</th>
+                            <th>Reschedules</th>
+                            <th>No Show Rate</th>
+                            <th>Close Rate</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="empty-state hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p>No entries yet. Add your first entry above!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Data storage
+        let entries = [];
+        let currentUser = null;
+        const isGuestMode = new URLSearchParams(window.location.search).get('guest') === 'true' || localStorage.getItem('guestMode') === 'true';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check auth status
+            if (!isGuestMode) {
+                try {
+                    const response = await fetch('/api/me', { credentials: 'include' });
+                    const data = await response.json();
+                    if (data.user) {
+                        currentUser = data.user;
+                    }
+                } catch (e) {
+                    console.log('Server not available, using guest mode');
+                }
+            }
+            
+            // Set default date to today
+            document.getElementById('newDate').value = new Date().toISOString().split('T')[0];
+            await loadEntries();
+        });
+        
+        async function loadEntries() {
+            if (currentUser && !isGuestMode) {
+                try {
+                    const response = await fetch('/api/entries', { credentials: 'include' });
+                    const data = await response.json();
+                    entries = data.entries || [];
+                } catch (e) {
+                    entries = JSON.parse(localStorage.getItem('salesEntries')) || [];
+                }
+            } else {
+                entries = JSON.parse(localStorage.getItem('salesEntries')) || [];
+            }
+            renderTable();
+        }
+
+        async function addEntry() {
+            const entry = {
+                id: Date.now(),
+                date: document.getElementById('newDate').value,
+                role: document.getElementById('newRole').value,
+                bookedCalls: parseInt(document.getElementById('newBookedCalls').value) || 0,
+                noShows: parseInt(document.getElementById('newNoShows').value) || 0,
+                closedWon: parseInt(document.getElementById('newClosedWon').value) || 0,
+                closedLost: parseInt(document.getElementById('newClosedLost').value) || 0,
+                pif: parseInt(document.getElementById('newPIF').value) || 0,
+                splits: parseInt(document.getElementById('newSplits').value) || 0,
+                cashCollected: parseFloat(document.getElementById('newCashCollected').value) || 0,
+                renewalsCash: parseFloat(document.getElementById('newRenewalsCash').value) || 0,
+                reschedules: parseInt(document.getElementById('newReschedules').value) || 0
+            };
+
+            if (!entry.date) {
+                showToast('Please select a date', 'error');
+                return;
+            }
+
+            if (currentUser && !isGuestMode) {
+                try {
+                    const response = await fetch('/api/entries', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(entry)
+                    });
+                    const data = await response.json();
+                    if (data.id) entry.id = data.id;
+                } catch (e) {
+                    console.log('API error, saving locally');
+                }
+            }
+            
+            entries.unshift(entry);
+            saveData();
+            renderTable();
+            clearForm();
+            showToast('Entry added successfully!', 'success');
+        }
+
+        async function updateEntry(id, field, value) {
+            const entry = entries.find(e => e.id === id);
+            if (entry) {
+                if (['bookedCalls', 'noShows', 'closedWon', 'closedLost', 'pif', 'splits', 'reschedules'].includes(field)) {
+                    entry[field] = parseInt(value) || 0;
+                } else if (['cashCollected', 'renewalsCash'].includes(field)) {
+                    entry[field] = parseFloat(value) || 0;
+                } else {
+                    entry[field] = value;
+                }
+                
+                // Save to API if logged in
+                if (currentUser && !isGuestMode) {
+                    try {
+                        await fetch(`/api/entries/${id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(entry)
+                        });
+                    } catch (e) {
+                        console.log('API error, saved locally');
+                    }
+                }
+                
+                saveData();
+                renderTable();
+                updateSaveStatus(false);
+                setTimeout(() => updateSaveStatus(true), 500);
+            }
+        }
+
+        async function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                if (currentUser && !isGuestMode) {
+                    try {
+                        await fetch(`/api/entries/${id}`, { method: 'DELETE', credentials: 'include' });
+                    } catch (e) {
+                        console.log('API error');
+                    }
+                }
+                entries = entries.filter(e => e.id !== id);
+                saveData();
+                renderTable();
+                showToast('Entry deleted', 'success');
+            }
+        }
+
+        async function duplicateEntry(id) {
+            const entry = entries.find(e => e.id === id);
+            if (entry) {
+                const newEntry = { ...entry, id: Date.now() };
+                
+                if (currentUser && !isGuestMode) {
+                    try {
+                        const response = await fetch('/api/entries', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify(newEntry)
+                        });
+                        const data = await response.json();
+                        if (data.id) newEntry.id = data.id;
+                    } catch (e) {
+                        console.log('API error');
+                    }
+                }
+                
+                entries.unshift(newEntry);
+                saveData();
+                renderTable();
+                showToast('Entry duplicated', 'success');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('newDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('newRole').value = 'Closer';
+            document.getElementById('newBookedCalls').value = '0';
+            document.getElementById('newNoShows').value = '0';
+            document.getElementById('newClosedWon').value = '0';
+            document.getElementById('newClosedLost').value = '0';
+            document.getElementById('newPIF').value = '0';
+            document.getElementById('newSplits').value = '0';
+            document.getElementById('newCashCollected').value = '0';
+            document.getElementById('newRenewalsCash').value = '0';
+            document.getElementById('newReschedules').value = '0';
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete ALL entries? This cannot be undone.')) {
+                entries = [];
+                saveData();
+                renderTable();
+                showToast('All entries cleared', 'success');
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('salesEntries', JSON.stringify(entries));
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = entries.filter(e => 
+                e.date.includes(searchTerm) || 
+                e.role.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            tbody.innerHTML = filtered.map(entry => {
+                const showUps = entry.bookedCalls - entry.noShows;
+                const noShowRate = entry.bookedCalls > 0 ? Math.min(entry.noShows / entry.bookedCalls * 100, 100).toFixed(1) : 0;
+                const closeRate = showUps > 0 ? Math.min(entry.closedWon / showUps * 100, 100).toFixed(1) : 0;
+
+                return `
+                    <tr>
+                        <td>
+                            <input type="date" class="editable-cell" value="${entry.date}" 
+                                   onchange="updateEntry(${entry.id}, 'date', this.value)">
+                        </td>
+                        <td>
+                            <select class="editable-cell" onchange="updateEntry(${entry.id}, 'role', this.value)">
+                                <option value="Closer" ${entry.role === 'Closer' ? 'selected' : ''}>Closer</option>
+                                <option value="Setter" ${entry.role === 'Setter' ? 'selected' : ''}>Setter</option>
+                                <option value="PCF" ${entry.role === 'PCF' ? 'selected' : ''}>PCF</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.bookedCalls || 0}" min="0"
+                                   onchange="updateEntry(${entry.id}, 'bookedCalls', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.noShows || 0}" min="0"
+                                   onchange="updateEntry(${entry.id}, 'noShows', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.closedWon || 0}" min="0"
+                                   onchange="updateEntry(${entry.id}, 'closedWon', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.closedLost || 0}" min="0"
+                                   onchange="updateEntry(${entry.id}, 'closedLost', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.pif || 0}" min="0"
+                                   onchange="updateEntry(${entry.id}, 'pif', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.splits || 0}" min="0"
+                                   onchange="updateEntry(${entry.id}, 'splits', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.cashCollected || 0}" min="0" step="0.01"
+                                   onchange="updateEntry(${entry.id}, 'cashCollected', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.renewalsCash || 0}" min="0" step="0.01"
+                                   onchange="updateEntry(${entry.id}, 'renewalsCash', this.value)">
+                        </td>
+                        <td>
+                            <input type="number" class="editable-cell" value="${entry.reschedules || 0}" min="0"
+                                   onchange="updateEntry(${entry.id}, 'reschedules', this.value)">
+                        </td>
+                        <td class="calculated">${noShowRate}%</td>
+                        <td class="calculated">${closeRate}%</td>
+                        <td>
+                            <div class="row-actions">
+                                <button class="row-btn" onclick="duplicateEntry(${entry.id})" title="Duplicate">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                                <button class="row-btn delete" onclick="deleteEntry(${entry.id})" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportToCSV() {
+            if (entries.length === 0) {
+                showToast('No data to export', 'error');
+                return;
+            }
+
+            const headers = ['Date', 'Role', 'Booked Calls', 'No Shows', 'Closed Won', 'PIF', 'Splits', 'Cash Collected', 'Renewals Cash Collected', 'Reschedules'];
+            const rows = entries.map(e => [
+                e.date,
+                e.role,
+                e.bookedCalls,
+                e.noShows,
+                e.closedWon,
+                e.pif,
+                e.splits,
+                e.cashCollected,
+                e.renewalsCash,
+                e.reschedules
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sales_data_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            showToast('CSV exported successfully!', 'success');
+        }
+
+        function updateSaveStatus(saved) {
+            const status = document.getElementById('saveStatus');
+            if (saved) {
+                status.className = 'status-badge status-saved';
+                status.innerHTML = '<span class="status-dot"></span> All changes saved';
+            } else {
+                status.className = 'status-badge status-unsaved';
+                status.innerHTML = '<span class="status-dot"></span> Saving...';
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = `toast ${type}`;
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function loadDemoData() {
+            if (entries.length > 0 && !confirm('This will add comparison data for Dec 6-7. Continue?')) {
+                return;
+            }
+            
+            const demoEntries = [
+                // Previous period (Dec 6-7, 2025) - for comparison with your Dec 8-9 data
+                { id: Date.now() + 1, date: '2025-12-06', role: 'Closer', bookedCalls: 14, noShows: 3, closedWon: 6, pif: 2, splits: 2, cashCollected: 17500, renewalsCash: 2200, reschedules: 2 },
+                { id: Date.now() + 2, date: '2025-12-07', role: 'Closer', bookedCalls: 16, noShows: 4, closedWon: 7, pif: 3, splits: 2, cashCollected: 20000, renewalsCash: 2800, reschedules: 3 }
+            ];
+            
+            entries = [...entries, ...demoEntries];
+            saveData();
+            renderTable();
+            showToast('Comparison data added for Dec 6-7!', 'success');
+        }
+    </script>
+</body>
+</html>
