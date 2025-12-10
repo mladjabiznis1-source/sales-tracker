@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Scorecard | Media 42</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0a0a0a;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span {
+            color: #7C3AED;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #7C3AED;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #7C3AED;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .refresh-btn:hover {
+            background: #6D28D9;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Scorecard Sections */
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #252525;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .metric-card {
+            background: #141414;
+            border: 1px solid #1f1f1f;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+
+        .metric-card:hover {
+            border-color: #333;
+        }
+
+        .metric-card.highlight {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-color: #7C3AED;
+        }
+
+        .metric-card.success {
+            border-left: 3px solid #10B981;
+        }
+
+        .metric-card.warning {
+            border-left: 3px solid #F59E0B;
+        }
+
+        .metric-card.danger {
+            border-left: 3px solid #EF4444;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .metric-value.money {
+            color: #10B981;
+        }
+
+        .metric-value.percentage {
+            color: #3B82F6;
+        }
+
+        .metric-value.negative {
+            color: #EF4444;
+        }
+
+        .metric-subtext {
+            font-size: 11px;
+            color: #555;
+            margin-top: 6px;
+        }
+
+        /* Two Column Layout for Setter/Closer */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .column-card {
+            background: #141414;
+            border: 1px solid #1f1f1f;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .column-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-card h3 .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .column-card h3 .badge.setter {
+            background: #3B82F6;
+        }
+
+        .column-card h3 .badge.closer {
+            background: #8B5CF6;
+        }
+
+        .column-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .mini-metric {
+            text-align: center;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 8px;
+        }
+
+        .mini-metric .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .mini-metric .label {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: #141414;
+            border: 1px solid #1f1f1f;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #1f1f1f;
+        }
+
+        .table-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1400px;
+        }
+
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #1f1f1f;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #0f0f0f;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #1a1a1a;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.setter { background: #3B82F6; color: #fff; }
+        .badge.closer { background: #8B5CF6; color: #fff; }
+        .badge.closed { background: #10B981; color: #fff; }
+        .badge.no-show { background: #EF4444; color: #fff; }
+        .badge.pending { background: #F59E0B; color: #000; }
+        .badge.not-closed { background: #6B7280; color: #fff; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+
+        /* Leaderboard */
+        .leaderboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .leaderboard-card {
+            background: #141414;
+            border: 1px solid #1f1f1f;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .leaderboard-card h4 {
+            font-size: 13px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #1f1f1f;
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-item .rank {
+            width: 24px;
+            height: 24px;
+            background: #252525;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+
+        .leaderboard-item .rank.gold { background: #F59E0B; color: #000; }
+        .leaderboard-item .rank.silver { background: #9CA3AF; color: #000; }
+        .leaderboard-item .rank.bronze { background: #B45309; color: #fff; }
+
+        .leaderboard-item .name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .leaderboard-item .value {
+            font-weight: 700;
+            color: #10B981;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .column-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 <span>Media 42</span> Sales Scorecard</h1>
+            <div class="header-controls">
+                <div class="filter-group">
+                    <label>From:</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="filter-group">
+                    <label>To:</label>
+                    <input type="date" id="endDate">
+                </div>
+                <div class="filter-group">
+                    <label>Role:</label>
+                    <select id="roleFilter">
+                        <option value="">All</option>
+                        <option value="Setter">Setter</option>
+                        <option value="Closer">Closer</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Person:</label>
+                    <select id="personFilter">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+                <span class="last-updated" id="lastUpdated"></span>
+            </div>
+        </div>
+
+        <!-- Revenue & Cash Section -->
+        <div class="section">
+            <div class="section-title">💰 Revenue & Cash</div>
+            <div class="metrics-grid" id="revenueMetrics">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Setter vs Closer Breakdown -->
+        <div class="section">
+            <div class="section-title">👥 Role Performance</div>
+            <div class="two-column">
+                <div class="column-card">
+                    <h3><span class="badge setter">SETTER</span> Metrics</h3>
+                    <div class="column-metrics" id="setterMetrics">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+                <div class="column-card">
+                    <h3><span class="badge closer">CLOSER</span> Metrics</h3>
+                    <div class="column-metrics" id="closerMetrics">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculated Performance Metrics -->
+        <div class="section">
+            <div class="section-title">📈 Calculated Metrics (Auto)</div>
+            <div class="metrics-grid" id="calculatedMetrics">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Call Outcomes -->
+        <div class="section">
+            <div class="section-title">📞 Call Outcomes</div>
+            <div class="metrics-grid" id="outcomeMetrics">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Leaderboards -->
+        <div class="section">
+            <div class="section-title">🏆 Leaderboards</div>
+            <div class="leaderboard" id="leaderboards">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- All Submissions Table -->
+        <div class="section">
+            <div class="section-title">📋 All Form Submissions</div>
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Submissions</h3>
+                    <span id="entryCount">0 entries</span>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Role</th>
+                                <th>Name</th>
+                                <th>Dials</th>
+                                <th>Pick Ups</th>
+                                <th>DQ's</th>
+                                <th>Pitched</th>
+                                <th>Set</th>
+                                <th>Scheduled</th>
+                                <th>Live Calls</th>
+                                <th>Offer</th>
+                                <th>Outcome</th>
+                                <th>Cash</th>
+                                <th>Revenue</th>
+                                <th>Prospect</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr><td colspan="15" class="loading">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://sales-tracker-jsnv.onrender.com';
+        let allData = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default dates (all time - 1 year back to 1 year forward)
+            const today = new Date();
+            const yearAgo = new Date(today);
+            yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+            const yearAhead = new Date(today);
+            yearAhead.setFullYear(yearAhead.getFullYear() + 1);
+            
+            document.getElementById('startDate').value = yearAgo.toISOString().split('T')[0];
+            document.getElementById('endDate').value = yearAhead.toISOString().split('T')[0];
+
+            // Filter listeners
+            ['startDate', 'endDate', 'roleFilter', 'personFilter'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFilters);
+            });
+
+            loadData();
+        });
+
+        async function loadData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/forms/entries`);
+                if (response.ok) {
+                    const data = await response.json();
+                    allData = data.entries || [];
+                    populatePersonFilter();
+                    applyFilters();
+                    document.getElementById('lastUpdated').textContent = 
+                        `Updated: ${new Date().toLocaleTimeString()}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('tableBody').innerHTML = 
+                    '<tr><td colspan="15" class="empty-state">Error connecting to server</td></tr>';
+            }
+        }
+
+        function populatePersonFilter() {
+            const people = new Set();
+            allData.forEach(e => {
+                if (e.closerName) people.add(e.closerName);
+                if (e.setterName) people.add(e.setterName);
+            });
+            
+            const select = document.getElementById('personFilter');
+            select.innerHTML = '<option value="">All</option>';
+            [...people].sort().forEach(name => {
+                select.innerHTML += `<option value="${name}">${name}</option>`;
+            });
+        }
+
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const roleFilter = document.getElementById('roleFilter').value;
+            const personFilter = document.getElementById('personFilter').value;
+
+            let filtered = allData.filter(entry => {
+                const entryDate = entry.callDate || entry.timestamp?.split('T')[0];
+                if (startDate && entryDate < startDate) return false;
+                if (endDate && entryDate > endDate) return false;
+                if (roleFilter && entry.role !== roleFilter) return false;
+                if (personFilter) {
+                    if (entry.closerName !== personFilter && entry.setterName !== personFilter) return false;
+                }
+                return true;
+            });
+
+            renderAll(filtered);
+        }
+
+        function renderAll(data) {
+            renderRevenueMetrics(data);
+            renderRoleMetrics(data);
+            renderCalculatedMetrics(data);
+            renderOutcomeMetrics(data);
+            renderLeaderboards(data);
+            renderTable(data);
+        }
+
+        function renderRevenueMetrics(data) {
+            const totalCash = data.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0);
+            const totalRevenue = data.reduce((sum, e) => sum + (parseFloat(e.revenueGenerated) || 0), 0);
+            const avgDealSize = data.filter(e => e.cashCollected > 0).length > 0 
+                ? totalCash / data.filter(e => e.cashCollected > 0).length : 0;
+            const submissions = data.length;
+
+            document.getElementById('revenueMetrics').innerHTML = `
+                <div class="metric-card highlight">
+                    <div class="metric-label">Total Cash Collected</div>
+                    <div class="metric-value money">$${totalCash.toLocaleString()}</div>
+                </div>
+                <div class="metric-card highlight">
+                    <div class="metric-label">Total Revenue Generated</div>
+                    <div class="metric-value money">$${totalRevenue.toLocaleString()}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Avg Deal Size</div>
+                    <div class="metric-value money">$${avgDealSize.toLocaleString(undefined, {maximumFractionDigits: 0})}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Submissions</div>
+                    <div class="metric-value">${submissions}</div>
+                </div>
+            `;
+        }
+
+        function renderRoleMetrics(data) {
+            const setters = data.filter(e => e.role === 'Setter');
+            const closers = data.filter(e => e.role === 'Closer');
+
+            // Setter metrics
+            const setterDials = setters.reduce((sum, e) => sum + (parseInt(e.dials) || 0), 0);
+            const setterPickUps = setters.reduce((sum, e) => sum + (parseInt(e.pickUps) || 0), 0);
+            const setterDQs = setters.reduce((sum, e) => sum + (parseInt(e.dqs) || 0), 0);
+            const setterPitched = setters.reduce((sum, e) => sum + (parseInt(e.apptsPitched) || 0), 0);
+            const setterSet = setters.reduce((sum, e) => sum + (parseInt(e.apptsSet) || 0), 0);
+            const setterCash = setters.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0);
+
+            document.getElementById('setterMetrics').innerHTML = `
+                <div class="mini-metric"><div class="value">${setterDials}</div><div class="label">Dials</div></div>
+                <div class="mini-metric"><div class="value">${setterPickUps}</div><div class="label">Pick Ups</div></div>
+                <div class="mini-metric"><div class="value">${setterDQs}</div><div class="label">DQ's</div></div>
+                <div class="mini-metric"><div class="value">${setterPitched}</div><div class="label">Pitched</div></div>
+                <div class="mini-metric"><div class="value">${setterSet}</div><div class="label">Appts Set</div></div>
+                <div class="mini-metric"><div class="value" style="color:#10B981">$${setterCash.toLocaleString()}</div><div class="label">Cash</div></div>
+            `;
+
+            // Closer metrics
+            const closerScheduled = closers.reduce((sum, e) => sum + (parseInt(e.callsScheduled) || 0), 0);
+            const closerLive = closers.reduce((sum, e) => sum + (parseInt(e.liveCalls) || 0), 0);
+            const closerCash = closers.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0);
+            const closerRevenue = closers.reduce((sum, e) => sum + (parseFloat(e.revenueGenerated) || 0), 0);
+            const closerClosed = closers.filter(e => e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')).length;
+            const closerOffers = closers.filter(e => e.offerMade === 'Yes').length;
+
+            document.getElementById('closerMetrics').innerHTML = `
+                <div class="mini-metric"><div class="value">${closerScheduled}</div><div class="label">Scheduled</div></div>
+                <div class="mini-metric"><div class="value">${closerLive}</div><div class="label">Live Calls</div></div>
+                <div class="mini-metric"><div class="value">${closerOffers}</div><div class="label">Offers Made</div></div>
+                <div class="mini-metric"><div class="value">${closerClosed}</div><div class="label">Closed</div></div>
+                <div class="mini-metric"><div class="value" style="color:#10B981">$${closerCash.toLocaleString()}</div><div class="label">Cash</div></div>
+                <div class="mini-metric"><div class="value" style="color:#10B981">$${closerRevenue.toLocaleString()}</div><div class="label">Revenue</div></div>
+            `;
+        }
+
+        function renderCalculatedMetrics(data) {
+            const setters = data.filter(e => e.role === 'Setter');
+            const closers = data.filter(e => e.role === 'Closer');
+
+            // Setter calculations
+            const totalDials = setters.reduce((sum, e) => sum + (parseInt(e.dials) || 0), 0);
+            const totalPickUps = setters.reduce((sum, e) => sum + (parseInt(e.pickUps) || 0), 0);
+            const totalSet = setters.reduce((sum, e) => sum + (parseInt(e.apptsSet) || 0), 0);
+            
+            const dialToPickUp = totalDials > 0 ? ((totalPickUps / totalDials) * 100).toFixed(1) : 0;
+            const dialToAppt = totalDials > 0 ? ((totalSet / totalDials) * 100).toFixed(1) : 0;
+            const pickUpToAppt = totalPickUps > 0 ? ((totalSet / totalPickUps) * 100).toFixed(1) : 0;
+
+            // Closer calculations
+            const totalScheduled = closers.reduce((sum, e) => sum + (parseInt(e.callsScheduled) || 0), 0);
+            const totalLive = closers.reduce((sum, e) => sum + (parseInt(e.liveCalls) || 0), 0);
+            const totalClosed = closers.filter(e => e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')).length;
+            const totalNoShow = data.filter(e => e.callOutcome?.toLowerCase().includes('no show')).length;
+
+            const showRate = totalScheduled > 0 ? ((totalLive / totalScheduled) * 100).toFixed(1) : 0;
+            const closeRate = totalLive > 0 ? ((totalClosed / totalLive) * 100).toFixed(1) : 0;
+            const noShowRate = totalScheduled > 0 ? ((totalNoShow / totalScheduled) * 100).toFixed(1) : 0;
+
+            document.getElementById('calculatedMetrics').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Dial → Pick Up Rate</div>
+                    <div class="metric-value percentage">${dialToPickUp}%</div>
+                    <div class="metric-subtext">${totalPickUps} / ${totalDials} dials</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Dial → Appt Rate</div>
+                    <div class="metric-value percentage">${dialToAppt}%</div>
+                    <div class="metric-subtext">${totalSet} / ${totalDials} dials</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Pick Up → Appt Rate</div>
+                    <div class="metric-value percentage">${pickUpToAppt}%</div>
+                    <div class="metric-subtext">${totalSet} / ${totalPickUps} pick ups</div>
+                </div>
+                <div class="metric-card ${parseFloat(showRate) >= 70 ? 'success' : parseFloat(showRate) >= 50 ? 'warning' : 'danger'}">
+                    <div class="metric-label">Show Rate</div>
+                    <div class="metric-value percentage">${showRate}%</div>
+                    <div class="metric-subtext">${totalLive} / ${totalScheduled} scheduled</div>
+                </div>
+                <div class="metric-card ${parseFloat(closeRate) >= 30 ? 'success' : parseFloat(closeRate) >= 20 ? 'warning' : 'danger'}">
+                    <div class="metric-label">Close Rate</div>
+                    <div class="metric-value percentage">${closeRate}%</div>
+                    <div class="metric-subtext">${totalClosed} / ${totalLive} live calls</div>
+                </div>
+                <div class="metric-card ${parseFloat(noShowRate) <= 20 ? 'success' : parseFloat(noShowRate) <= 35 ? 'warning' : 'danger'}">
+                    <div class="metric-label">No Show Rate</div>
+                    <div class="metric-value negative">${noShowRate}%</div>
+                    <div class="metric-subtext">${totalNoShow} no shows</div>
+                </div>
+            `;
+        }
+
+        function renderOutcomeMetrics(data) {
+            const outcomes = {};
+            data.forEach(e => {
+                const outcome = e.callOutcome || 'Unknown';
+                outcomes[outcome] = (outcomes[outcome] || 0) + 1;
+            });
+
+            const html = Object.entries(outcomes).map(([outcome, count]) => `
+                <div class="metric-card">
+                    <div class="metric-label">${outcome}</div>
+                    <div class="metric-value">${count}</div>
+                    <div class="metric-subtext">${((count / data.length) * 100).toFixed(1)}% of total</div>
+                </div>
+            `).join('');
+
+            document.getElementById('outcomeMetrics').innerHTML = html || '<div class="empty-state">No outcome data</div>';
+        }
+
+        function renderLeaderboards(data) {
+            // Cash leaderboard
+            const cashByPerson = {};
+            data.forEach(e => {
+                const name = e.closerName || e.setterName || 'Unknown';
+                cashByPerson[name] = (cashByPerson[name] || 0) + (parseFloat(e.cashCollected) || 0);
+            });
+            const cashLeaders = Object.entries(cashByPerson).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            // Appts set leaderboard
+            const apptsByPerson = {};
+            data.filter(e => e.role === 'Setter').forEach(e => {
+                const name = e.setterName || 'Unknown';
+                apptsByPerson[name] = (apptsByPerson[name] || 0) + (parseInt(e.apptsSet) || 0);
+            });
+            const apptsLeaders = Object.entries(apptsByPerson).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            // Dials leaderboard
+            const dialsByPerson = {};
+            data.filter(e => e.role === 'Setter').forEach(e => {
+                const name = e.setterName || 'Unknown';
+                dialsByPerson[name] = (dialsByPerson[name] || 0) + (parseInt(e.dials) || 0);
+            });
+            const dialsLeaders = Object.entries(dialsByPerson).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            document.getElementById('leaderboards').innerHTML = `
+                <div class="leaderboard-card">
+                    <h4>💰 Top Cash Collected</h4>
+                    ${cashLeaders.map((item, i) => `
+                        <div class="leaderboard-item">
+                            <span class="rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</span>
+                            <span class="name">${item[0]}</span>
+                            <span class="value">$${item[1].toLocaleString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="leaderboard-card">
+                    <h4>📅 Top Appts Set</h4>
+                    ${apptsLeaders.map((item, i) => `
+                        <div class="leaderboard-item">
+                            <span class="rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</span>
+                            <span class="name">${item[0]}</span>
+                            <span class="value">${item[1]}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="leaderboard-card">
+                    <h4>📞 Top Dials</h4>
+                    ${dialsLeaders.map((item, i) => `
+                        <div class="leaderboard-item">
+                            <span class="rank ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : ''}">${i + 1}</span>
+                            <span class="name">${item[0]}</span>
+                            <span class="value">${item[1]}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderTable(data) {
+            document.getElementById('entryCount').textContent = `${data.length} entries`;
+
+            if (data.length === 0) {
+                document.getElementById('tableBody').innerHTML = 
+                    '<tr><td colspan="15" class="empty-state">No submissions found</td></tr>';
+                return;
+            }
+
+            document.getElementById('tableBody').innerHTML = data.map(e => `
+                <tr>
+                    <td>${e.callDate || '-'}</td>
+                    <td><span class="badge ${(e.role || '').toLowerCase()}">${e.role || '-'}</span></td>
+                    <td>${e.closerName || e.setterName || '-'}</td>
+                    <td>${e.dials || '-'}</td>
+                    <td>${e.pickUps || '-'}</td>
+                    <td>${e.dqs || '-'}</td>
+                    <td>${e.apptsPitched || '-'}</td>
+                    <td>${e.apptsSet || '-'}</td>
+                    <td>${e.callsScheduled || '-'}</td>
+                    <td>${e.liveCalls || '-'}</td>
+                    <td>${e.offerMade || '-'}</td>
+                    <td><span class="badge ${getOutcomeClass(e.callOutcome)}">${e.callOutcome || '-'}</span></td>
+                    <td>${e.cashCollected ? '$' + parseFloat(e.cashCollected).toLocaleString() : '-'}</td>
+                    <td>${e.revenueGenerated ? '$' + parseFloat(e.revenueGenerated).toLocaleString() : '-'}</td>
+                    <td>${e.prospectEmail || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function getOutcomeClass(outcome) {
+            if (!outcome) return '';
+            const lower = outcome.toLowerCase();
+            if (lower.includes('closed') && !lower.includes('not')) return 'closed';
+            if (lower.includes('no show')) return 'no-show';
+            if (lower.includes('not closed')) return 'not-closed';
+            if (lower.includes('pending')) return 'pending';
+            return '';
+        }
+    </script>
+</body>
+</html>
