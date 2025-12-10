@@ -326,13 +326,14 @@
                     <thead>
                         <tr>
                             <th>Closer</th>
-                            <th>Show Ups</th>
-                            <th>Cash Collected</th>
-                            <th>Close Rate</th>
+                            <th>Date</th>
+                            <th>Outcome</th>
+                            <th>Cash</th>
+                            <th>Revenue</th>
                         </tr>
                     </thead>
                     <tbody id="scoreboardBody">
-                        <tr><td colspan="4" class="no-data">No data</td></tr>
+                        <tr><td colspan="5" class="no-data">No data</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -737,37 +738,28 @@
 
             document.getElementById('setterScoreboardBody').innerHTML = setterRows || '<tr><td colspan="7" class="no-data">No setter data</td></tr>';
 
-            // CLOSER SCOREBOARD - group by closer name
+            // CLOSER SCOREBOARD - show individual closer entries
             const closerEntries = data.filter(e => e.role === 'Closer');
-            const closerStats = {};
-            closerEntries.forEach(e => {
-                const closer = e.closerName || 'Unknown';
-                if (!closerStats[closer]) {
-                    closerStats[closer] = { showUps: 0, cash: 0, closed: 0, liveCalls: 0 };
-                }
-                closerStats[closer].showUps += parseInt(e.liveCalls) || 0;
-                closerStats[closer].cash += parseFloat(e.cashCollected) || 0;
-                closerStats[closer].liveCalls += parseInt(e.liveCalls) || 0;
-                if (e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')) {
-                    closerStats[closer].closed++;
-                }
-            });
-
-            const closerRows = Object.entries(closerStats)
-                .sort((a, b) => b[1].cash - a[1].cash)
-                .map(([name, stats]) => {
-                    const closeRate = stats.liveCalls > 0 ? ((stats.closed / stats.liveCalls) * 100).toFixed(0) : 0;
+            const closerRows = closerEntries
+                .sort((a, b) => (b.callDate || b.timestamp || '').localeCompare(a.callDate || a.timestamp || ''))
+                .map(e => {
+                    const name = e.closerName || 'Unknown';
+                    const date = e.callDate || (e.timestamp ? e.timestamp.split('T')[0] : '-');
+                    const outcome = e.callOutcome || '-';
+                    const cash = parseFloat(e.cashCollected) || 0;
+                    const revenue = parseFloat(e.revenueGenerated) || 0;
                     return `
                         <tr>
                             <td>${name}</td>
-                            <td>${stats.showUps}</td>
-                            <td>$${stats.cash.toLocaleString()}</td>
-                            <td>${closeRate}%</td>
+                            <td>${date}</td>
+                            <td>${outcome}</td>
+                            <td>$${cash.toLocaleString()}</td>
+                            <td>$${revenue.toLocaleString()}</td>
                         </tr>
                     `;
                 }).join('');
 
-            document.getElementById('scoreboardBody').innerHTML = closerRows || '<tr><td colspan="4" class="no-data">No closer data</td></tr>';
+            document.getElementById('scoreboardBody').innerHTML = closerRows || '<tr><td colspan="5" class="no-data">No closer data</td></tr>';
         }
 
         function renderPaymentTypes(data) {
