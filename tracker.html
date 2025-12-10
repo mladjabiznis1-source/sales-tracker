@@ -550,61 +550,58 @@
         }
 
         function renderCoreMetrics(data) {
-            // Calculate core metrics
+            // Calculate core metrics - SETTER metrics
+            const totalDials = data.reduce((sum, e) => sum + (parseInt(e.dials) || 0), 0);
+            const totalPickUps = data.reduce((sum, e) => sum + (parseInt(e.pickUps) || 0), 0);
+            const totalDQs = data.reduce((sum, e) => sum + (parseInt(e.dqs) || 0), 0);
+            const totalApptsPitched = data.reduce((sum, e) => sum + (parseInt(e.apptsPitched) || 0), 0);
+            const totalApptsSet = data.reduce((sum, e) => sum + (parseInt(e.apptsSet) || 0), 0);
+            
+            // CLOSER metrics
             const liveCalls = data.reduce((sum, e) => sum + (parseInt(e.liveCalls) || 0), 0);
-            const noShows = data.filter(e => e.callOutcome?.toLowerCase().includes('no show')).length;
-            const closedWon = data.filter(e => e.callOutcome?.toLowerCase().includes('closed') && !e.callOutcome?.toLowerCase().includes('not')).length;
-            const pif = data.filter(e => e.offerMade === 'Yes' && e.cashCollected > 0).length; // PIF approximation
-            const splits = 0; // Not in form
             const cashCollected = data.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0);
-            const renewalsCash = 0; // Not in form
-
-            // Mock comparison percentages (would need historical data for real comparison)
-            const changes = {
-                liveCalls: 14.3,
-                noShows: 33.3,
-                closedWon: 16.7,
-                pif: 50.0,
-                splits: 0,
-                cash: 14.3,
-                renewals: 27.3
-            };
+            const revenueGenerated = data.reduce((sum, e) => sum + (parseFloat(e.revenueGenerated) || 0), 0);
 
             document.getElementById('coreMetrics').innerHTML = `
                 <div class="metric-card">
-                    <div class="metric-label">Booked Calls</div>
+                    <div class="metric-label">Total Dials</div>
+                    <div class="metric-value">${totalDials}</div>
+                    <div class="metric-change positive">Setter</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Pick Ups</div>
+                    <div class="metric-value">${totalPickUps}</div>
+                    <div class="metric-change positive">Setter</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">DQ's</div>
+                    <div class="metric-value">${totalDQs}</div>
+                    <div class="metric-change neutral">Setter</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Appts Pitched</div>
+                    <div class="metric-value">${totalApptsPitched}</div>
+                    <div class="metric-change positive">Setter</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Appts Set</div>
+                    <div class="metric-value">${totalApptsSet}</div>
+                    <div class="metric-change positive">Setter</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Live Calls</div>
                     <div class="metric-value">${liveCalls}</div>
-                    <div class="metric-change ${changes.liveCalls >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.liveCalls)}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">No Shows</div>
-                    <div class="metric-value">${noShows}</div>
-                    <div class="metric-change ${changes.noShows >= 0 ? 'negative' : 'positive'}">↑ ${Math.abs(changes.noShows)}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Closed Won</div>
-                    <div class="metric-value">${closedWon}</div>
-                    <div class="metric-change ${changes.closedWon >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.closedWon)}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">PIF</div>
-                    <div class="metric-value">${pif}</div>
-                    <div class="metric-change ${changes.pif >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.pif)}%</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Splits</div>
-                    <div class="metric-value">${splits}</div>
-                    <div class="metric-change neutral">0.0%</div>
+                    <div class="metric-change positive">Closer</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Cash Collected</div>
                     <div class="metric-value money">$${cashCollected.toLocaleString()}</div>
-                    <div class="metric-change ${changes.cash >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.cash)}%</div>
+                    <div class="metric-change positive">Closer</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Renewals Cash</div>
-                    <div class="metric-value money">$${renewalsCash.toLocaleString()}</div>
-                    <div class="metric-change ${changes.renewals >= 0 ? 'positive' : 'negative'}">↑ ${Math.abs(changes.renewals)}%</div>
+                    <div class="metric-label">Revenue Generated</div>
+                    <div class="metric-value money">$${revenueGenerated.toLocaleString()}</div>
+                    <div class="metric-change positive">Closer</div>
                 </div>
             `;
         }
