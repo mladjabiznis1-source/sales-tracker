@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Form Submissions | Sales Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0D0D0D;
+            color: #FFFFFF;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .dashboard {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #FFFFFF;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 12px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: #1A1A1A;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: #888;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            background: #252525;
+            color: #fff;
+        }
+
+        .nav-tab.active {
+            background: #7C3AED;
+            border-color: #7C3AED;
+            color: #fff;
+        }
+
+        .filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            background: #1A1A1A;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #7C3AED;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: #1A1A1A;
+            border: 1px solid #252525;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .metric-value.money {
+            color: #10B981;
+        }
+
+        .table-container {
+            background: #1A1A1A;
+            border: 1px solid #252525;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #252525;
+        }
+
+        .table-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #252525;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #141414;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #202020;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .role-badge.setter {
+            background: #3B82F6;
+            color: #fff;
+        }
+
+        .role-badge.closer {
+            background: #8B5CF6;
+            color: #fff;
+        }
+
+        .outcome-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .outcome-badge.closed {
+            background: #10B981;
+            color: #fff;
+        }
+
+        .outcome-badge.no-show {
+            background: #EF4444;
+            color: #fff;
+        }
+
+        .outcome-badge.pending {
+            background: #F59E0B;
+            color: #fff;
+        }
+
+        .outcome-badge.lost {
+            background: #6B7280;
+            color: #fff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #888;
+        }
+
+        .refresh-btn {
+            padding: 8px 16px;
+            background: #7C3AED;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #6D28D9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>📊 Form Submissions</h1>
+            <div class="nav-tabs">
+                <a href="index.html" class="nav-tab">Dashboard</a>
+                <a href="forms.html" class="nav-tab active">Form Data</a>
+                <a href="entry.html" class="nav-tab">Manual Entry</a>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>From:</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="filter-group">
+                <label>To:</label>
+                <input type="date" id="endDate">
+            </div>
+            <div class="filter-group">
+                <label>Role:</label>
+                <select id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="Setter">Setter</option>
+                    <option value="Closer">Closer</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Outcome:</label>
+                <select id="outcomeFilter">
+                    <option value="">All Outcomes</option>
+                    <option value="Closed">Closed</option>
+                    <option value="No Show">No Show</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>
+            <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+        </div>
+
+        <div class="metrics-grid" id="metricsGrid">
+            <!-- Metrics will be inserted here -->
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2>All Submissions</h2>
+                <span id="entryCount">0 entries</span>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Role</th>
+                            <th>Name</th>
+                            <th>Dials</th>
+                            <th>Pick Ups</th>
+                            <th>DQ's</th>
+                            <th>Appts Pitched</th>
+                            <th>Appts Set</th>
+                            <th>Calls Scheduled</th>
+                            <th>Live Calls</th>
+                            <th>Outcome</th>
+                            <th>Cash Collected</th>
+                            <th>Revenue</th>
+                            <th>Prospect</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="14" class="loading">Loading data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://sales-tracker-jsnv.onrender.com';
+        let allData = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default date range (last 30 days)
+            const today = new Date();
+            const monthAgo = new Date(today);
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = monthAgo.toISOString().split('T')[0];
+
+            // Add filter listeners
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
+            document.getElementById('roleFilter').addEventListener('change', applyFilters);
+            document.getElementById('outcomeFilter').addEventListener('change', applyFilters);
+
+            loadData();
+        });
+
+        async function loadData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/forms/entries`);
+                if (response.ok) {
+                    const data = await response.json();
+                    allData = data.entries || [];
+                    applyFilters();
+                } else {
+                    showEmpty('Failed to load data');
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showEmpty('Error connecting to server');
+            }
+        }
+
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const roleFilter = document.getElementById('roleFilter').value;
+            const outcomeFilter = document.getElementById('outcomeFilter').value;
+
+            let filtered = allData.filter(entry => {
+                const entryDate = entry.callDate || entry.date;
+                if (startDate && entryDate < startDate) return false;
+                if (endDate && entryDate > endDate) return false;
+                if (roleFilter && entry.role !== roleFilter) return false;
+                if (outcomeFilter && entry.callOutcome !== outcomeFilter) return false;
+                return true;
+            });
+
+            renderMetrics(filtered);
+            renderTable(filtered);
+        }
+
+        function renderMetrics(data) {
+            const metrics = {
+                totalSubmissions: data.length,
+                totalCash: data.reduce((sum, e) => sum + (parseFloat(e.cashCollected) || 0), 0),
+                totalRevenue: data.reduce((sum, e) => sum + (parseFloat(e.revenueGenerated) || 0), 0),
+                totalDials: data.reduce((sum, e) => sum + (parseInt(e.dials) || 0), 0),
+                totalPickUps: data.reduce((sum, e) => sum + (parseInt(e.pickUps) || 0), 0),
+                totalApptsSet: data.reduce((sum, e) => sum + (parseInt(e.apptsSet) || 0), 0),
+                totalLiveCalls: data.reduce((sum, e) => sum + (parseInt(e.liveCalls) || 0), 0),
+                closedCount: data.filter(e => e.callOutcome === 'Closed' || e.callOutcome === 'Closed Won').length,
+                noShowCount: data.filter(e => e.callOutcome === 'No Show').length
+            };
+
+            const grid = document.getElementById('metricsGrid');
+            grid.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Total Submissions</div>
+                    <div class="metric-value">${metrics.totalSubmissions}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cash Collected</div>
+                    <div class="metric-value money">$${metrics.totalCash.toLocaleString()}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Revenue Generated</div>
+                    <div class="metric-value money">$${metrics.totalRevenue.toLocaleString()}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Dials</div>
+                    <div class="metric-value">${metrics.totalDials}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Pick Ups</div>
+                    <div class="metric-value">${metrics.totalPickUps}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Appts Set</div>
+                    <div class="metric-value">${metrics.totalApptsSet}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Live Calls</div>
+                    <div class="metric-value">${metrics.totalLiveCalls}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Closed / No Shows</div>
+                    <div class="metric-value">${metrics.closedCount} / ${metrics.noShowCount}</div>
+                </div>
+            `;
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            document.getElementById('entryCount').textContent = `${data.length} entries`;
+
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="14" class="empty-state">
+                            <h3>No submissions found</h3>
+                            <p>Try adjusting your filters or submit a form entry</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = data.map(entry => `
+                <tr>
+                    <td>${entry.callDate || entry.date || '-'}</td>
+                    <td><span class="role-badge ${(entry.role || '').toLowerCase()}">${entry.role || '-'}</span></td>
+                    <td>${entry.closerName || entry.setterName || '-'}</td>
+                    <td>${entry.dials || '-'}</td>
+                    <td>${entry.pickUps || '-'}</td>
+                    <td>${entry.dqs || '-'}</td>
+                    <td>${entry.apptsPitched || '-'}</td>
+                    <td>${entry.apptsSet || '-'}</td>
+                    <td>${entry.callsScheduled || '-'}</td>
+                    <td>${entry.liveCalls || '-'}</td>
+                    <td><span class="outcome-badge ${getOutcomeClass(entry.callOutcome)}">${entry.callOutcome || '-'}</span></td>
+                    <td>${entry.cashCollected ? '$' + parseFloat(entry.cashCollected).toLocaleString() : '-'}</td>
+                    <td>${entry.revenueGenerated ? '$' + parseFloat(entry.revenueGenerated).toLocaleString() : '-'}</td>
+                    <td>${entry.prospectEmail || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function getOutcomeClass(outcome) {
+            if (!outcome) return '';
+            const lower = outcome.toLowerCase();
+            if (lower.includes('closed') || lower.includes('won')) return 'closed';
+            if (lower.includes('no show') || lower.includes('no-show')) return 'no-show';
+            if (lower.includes('pending')) return 'pending';
+            if (lower.includes('lost')) return 'lost';
+            return '';
+        }
+
+        function showEmpty(message) {
+            document.getElementById('tableBody').innerHTML = `
+                <tr>
+                    <td colspan="14" class="empty-state">
+                        <h3>${message}</h3>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('metricsGrid').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
