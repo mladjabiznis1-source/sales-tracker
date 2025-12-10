@@ -170,10 +170,27 @@ app.get('/api/me', (req, res) => {
 
 // ============ GOOGLE FORM WEBHOOK (EOD Tracker) ============
 
+// Helper function to find a field by checking multiple possible names
+function findField(data, fieldNames) {
+  for (const name of fieldNames) {
+    if (data[name] !== undefined && data[name] !== '') {
+      return data[name];
+    }
+    // Also check for partial matches (field names with newlines get truncated)
+    for (const key of Object.keys(data)) {
+      if (key.startsWith(name.split('\n')[0]) && data[key] !== undefined && data[key] !== '') {
+        return data[key];
+      }
+    }
+  }
+  return null;
+}
+
 // Webhook to receive Google Form submissions from EOD Tracker | Media 42
 app.post('/api/webhook/google-form', (req, res) => {
   try {
     console.log('📥 Received Google Form submission:', req.body);
+    console.log('📥 Field names:', Object.keys(req.body));
     
     const data = req.body;
     
@@ -193,8 +210,8 @@ app.post('/api/webhook/google-form', (req, res) => {
       call_date: data['Date Call Was Taken'] || data['Date'] || data.callDate || data.date || '',
       offer_made: data['Offer Made'] || data.offerMade || '',
       call_outcome: data['Call Outcome'] || data.callOutcome || '',
-      cash_collected: parseFloat(data['Cash Collected\nThe amount of cash collected today (ex 4000, 2000, 1500)'] || data['Cash Collected'] || data.cashCollected || 0),
-      revenue_generated: parseFloat(data['Revenue Generated\nThe total value of the contract (ex: 4000, 4500)'] || data['Revenue Generated'] || data.revenueGenerated || 0),
+      cash_collected: parseFloat(findField(data, ['Cash Collected\nThe amount of cash collected today (ex 4000, 2000, 1500)', 'Cash Collected', 'cashCollected']) || 0),
+      revenue_generated: parseFloat(findField(data, ['Revenue Generated\nThe total value of the contract (ex: 4000, 4500)', 'Revenue Generated', 'revenueGenerated']) || 0),
       call_notes: data['Call Notes'] || data.callNotes || '',
       closer_name: data['Closer Name'] || data.closerName || '',
       setter_name: data['Setter Name'] || data['Setter'] || data.setterName || '',
