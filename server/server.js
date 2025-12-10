@@ -190,14 +190,14 @@ app.post('/api/webhook/google-form', (req, res) => {
       calls_scheduled: parseInt(data['Calls Scheduled?'] || data.callsScheduled || 0),
       live_calls: parseInt(data['LIVE Calls?'] || data.liveCalls || 0),
       prospect_email: data['Prospect Email'] || data.prospectEmail || '',
-      call_date: data['Date Call Was Taken'] || data.callDate || '',
+      call_date: data['Date Call Was Taken'] || data['Date'] || data.callDate || data.date || '',
       offer_made: data['Offer Made'] || data.offerMade || '',
       call_outcome: data['Call Outcome'] || data.callOutcome || '',
       cash_collected: parseFloat(data['Cash Collected\nThe amount of cash collected today (ex 4000, 2000, 1500)'] || data['Cash Collected'] || data.cashCollected || 0),
       revenue_generated: parseFloat(data['Revenue Generated\nThe total value of the contract (ex: 4000, 4500)'] || data['Revenue Generated'] || data.revenueGenerated || 0),
       call_notes: data['Call Notes'] || data.callNotes || '',
       closer_name: data['Closer Name'] || data.closerName || '',
-      setter_name: data['Setter Name'] || data.setterName || '',
+      setter_name: data['Setter Name'] || data['Setter'] || data.setterName || '',
       fathom_link: data['Fathom Link'] || data.fathomLink || ''
     };
 
