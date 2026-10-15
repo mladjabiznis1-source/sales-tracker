@@ -1,0 +1,8 @@
+node_modules
+.netlify
+.env
+access-codes.xlsx
+.venv
+.DS_Store
+public/places/
+public/income/
