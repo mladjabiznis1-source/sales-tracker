@@ -74,6 +74,19 @@
   const ORDERING = { supplier: "", url: "", code: "", loom: "", steps: [] };
   // Skip & Trace team: how students reach them. Fill in what you have; empty fields are hidden.
   const SKIP_TRACE = { loom: "", email: "", phone: "", text: "", hours: "", turnaround: "" };
+  // Start Here: the welcome video every new student watches first (Loom share link).
+  const ONBOARDING = { welcomeLoom: "" };
+  // Optional short "how this page works" video per page (any link: Loom, YouTube...). Empty = no button.
+  const PAGE_VIDEOS = { finder: "", dwell: "", leads: "", skiptrace: "", calling: "", objections: "", analyzer: "", yes: "", order: "", suppliers: "", setup: "", care: "", trends: "" };
+  // Restock & Care videos (Loom share links).
+  const CARE_VIDEOS = [
+    { title: "Load products into the machine", sub: "How to fill each slot so nothing jams.", url: "" },
+    { title: "Your weekly visit", sub: "Clean, check, restock: the 10-minute routine.", url: "" },
+    { title: "Fix a jam or payment problem", sub: "The common problems and how to fix them on the spot.", url: "" },
+  ];
+  // "How much should I order?" starting values. Fill in your standard machine's numbers so students
+  // see real defaults; leave empty and students type their own.
+  const ORDER_CALC = { slots: "", perSlot: "", perWeek: "", weeks: "" };
   // Setup & Install videos, in order. Paste Loom share links into `url`.
   const SETUP_VIDEOS = [
     { title: "Unbox it", sub: "What's in the box and how to unpack without damage.", url: "" },
@@ -199,25 +212,8 @@
     // Location finder starts at their home city unless they've searched somewhere else.
     if (!finder.origin && profile?.home) setOrigin(profile.home);
     await Promise.all([loadDwell(), loadLeads()]);
+    addPageHelp();
     selectTab(store.get("ic_tab", "dashboard"));
-  }
-
-  // ---- dashboard
-  function renderDashboard() {
-    const first = (profile?.name || "").split(/\s+/)[0] || "you";
-    $("#dashName").textContent = first;
-    const machines = Number(profile?.machines) || 0;
-    const yeses = leads.list.filter((l) => l.status === "yes" || l.status === "placed").length;
-    const toCall = leads.list.filter((l) => l.status === "new").length;
-    $("#dashStats").innerHTML = `
-      <div class="stat"><span class="label">Machines placed</span><div class="stat-num gold-num pop"><span data-count="${machines}">0</span></div><p class="stat-cap">${esc(profile?.goal ? profile.goal.slice(0, 60) : "Set a goal in your profile")}</p></div>
-      <div class="stat"><span class="label">Leads saved</span><div class="stat-num sm"><span data-count="${leads.list.length}">0</span></div><p class="stat-cap">${leads.list.length ? `${yeses} said yes · ${toCall} to call` : "Save spots from Locations"}</p></div>
-      <div class="stat"><span class="label">Objections mastered</span><div class="stat-num sm okc"><span data-count="${mastered.size}">0</span><small class="t4" style="font-size:.5em">/${OBJECTIONS.length}</small></div><p class="stat-cap">${mastered.size === OBJECTIONS.length ? "All of them. Go dial." : "Drill them in Objections"}</p></div>`;
-    countUps($("#dashStats"));
-    $("#dashChecks").innerHTML = dwell.list.length
-      ? dwell.list.slice(0, 6).map(dwellRow).join("")
-      : `<p class="t3">No spot checks yet. <a href="#" data-tab-link="dwell">Check your first spot →</a></p>`;
-    bindDwellRows($("#dashChecks"));
   }
 
   // ------------------------------------------------------------------ motion helpers
@@ -261,9 +257,9 @@
 
   // ------------------------------------------------------------------ sidebar navigation
   const TOOL_NAMES = {
-    dashboard: "Dashboard", finder: "Locations", dwell: "Dwell Check", calling: "Cold Calling", objections: "Objections",
-    analyzer: "Call Analyzer", yes: "Got a Yes", order: "Order a Machine", suppliers: "Suppliers", setup: "Setup & Install",
-    trends: "Trends", leads: "My Leads", skiptrace: "Skip & Trace Team", profile: "Profile",
+    dashboard: "Start Here", finder: "Find Spots", dwell: "Check a Spot", calling: "Call Scripts", objections: "Practice Pushback",
+    analyzer: "Grade My Calls", yes: "They Said Yes", order: "Buy a Machine", suppliers: "Suppliers & Ordering", setup: "Set Up Machine",
+    trends: "What's Selling", leads: "My Leads", skiptrace: "Find the Owner", care: "Restock & Care", profile: "Profile",
   };
   // Pages that were renamed or removed, so a remembered tab still lands somewhere sensible.
   const OLD_TABS = { scripts: "calling", coach: "analyzer", gage: "analyzer" };
@@ -290,6 +286,7 @@
     if (name === "trends") openTrends();
     if (name === "leads") openLeads();
     if (name === "skiptrace") renderSkip();
+    if (name === "care") renderCare();
     if (name === "dwell") { openDwell(dwell.prefill || {}); dwell.prefill = null; renderProven(); }
     if (name === "profile") $("#profileForm").innerHTML = profileFormHTML(profile || {});
     observeReveals($(`#tab-${name}`));
@@ -1636,6 +1633,168 @@
     e.target.value = "";
   }
 
+  // =================================================================== START HERE (the road to machine #1)
+  // Each step ticks itself off from what the student has actually done; "manual" steps get a button.
+  const ROAD = [
+    { k: "video", tab: "dashboard", title: "Watch the welcome video", how: "It's right below. 5 minutes, and you'll know how to use this whole site.", manual: true },
+    { k: "spots", tab: "finder", title: "Save 10 spots near you", how: "Open Find Spots, type your city, tick the places you like, press Save.", goal: 10, count: () => leads.list.length },
+    { k: "check", tab: "dwell", title: "Check your 3 best spots", how: "Open Check a Spot and answer the questions. Green means call them first.", goal: 3, count: () => dwell.list.length },
+    { k: "owner", tab: "skiptrace", title: "Get the owners' phone numbers", how: "Send your spots to our Find the Owner team. They send back the owner's name and cell.", goal: 1, count: () => leads.list.filter((l) => l.owner || l.ownerPhone).length },
+    { k: "learn", tab: "objections", title: "Learn the script and practice pushback", how: "Read the Call Scripts, then practice until you know half the answers by heart.", goal: 7, count: () => mastered.size },
+    { k: "calls", tab: "leads", title: "Make 10 calls", how: "Call from My Leads. After each call, change the status: no answer, follow up, said no or said yes.", goal: 10, count: () => leads.list.filter((l) => l.status !== "new").length },
+    { k: "yes", tab: "yes", title: "Get your first yes", how: "When an owner says yes, open They Said Yes and send the agreement the same day.", goal: 1, count: () => leads.list.filter((l) => l.status === "yes" || l.status === "placed").length },
+    { k: "machine", tab: "order", title: "Buy and set up your machine", how: "Order with our discount code, then follow Set Up Machine step by step. Mark the lead as Machine placed.", goal: 1, count: () => Math.max(leads.list.filter((l) => l.status === "placed").length, Number(profile?.machines) || 0) },
+  ];
+  const roadTicks = new Set(store.get("ic_road", []));
+  const stepDone = (s) => (s.manual ? roadTicks.has(s.k) : s.count() >= s.goal);
+
+  function renderDashboard() {
+    const first = (profile?.name || "").split(/\s+/)[0] || "there";
+    $("#dashName").textContent = first;
+    if (!$("#startVideo").childElementCount) $("#startVideo").innerHTML = videoCard({ title: "Welcome: how to use your toolkit", sub: "Watch once. It walks through every page from A to Z.", url: ONBOARDING.welcomeLoom });
+    const done = ROAD.filter(stepDone).length;
+    const next = ROAD.find((s) => !stepDone(s));
+    $("#roadCount").textContent = `${done} of ${ROAD.length} done`;
+    $("#roadBar").style.width = `${(done / ROAD.length) * 100}%`;
+    $("#nextStep").innerHTML = next
+      ? `<div class="card hl hl-glow next-step">
+          <span class="label">Your next step · step ${ROAD.indexOf(next) + 1} of ${ROAD.length}</span>
+          <p class="next-title">${esc(next.title)}</p>
+          <p class="t2">${esc(next.how)}</p>
+          ${next.manual
+            ? `<button class="btn btn-primary btn-lg" data-road-tick="${next.k}">I watched it ✓</button>`
+            : `<button class="btn btn-primary btn-lg" data-tab-link="${next.tab}">Do this step →</button>`}
+        </div>`
+      : `<div class="card hl hl-glow next-step"><span class="label">You did it</span><p class="next-title">Your first machine is live. 🎉</p><p class="t2">Now keep it stocked: open Restock &amp; Care and do the checklist every visit.</p><button class="btn btn-primary btn-lg" data-tab-link="care">Restock &amp; Care →</button></div>`;
+    $("#road").innerHTML = ROAD.map((s, i) => {
+      const ok = stepDone(s), cur = s === next;
+      const prog = s.manual ? "" : `<span class="road-prog">${Math.min(s.count(), s.goal)} / ${s.goal}</span>`;
+      return `<li class="road-step ${ok ? "done" : ""} ${cur ? "current" : ""}">
+        <span class="road-n" aria-hidden="true">${ok ? "✓" : i + 1}</span>
+        <div class="grow"><p class="road-title">${esc(s.title)}</p><p class="small t3">${esc(s.how)}</p></div>
+        ${prog}
+        ${s.manual
+          ? `<button class="btn btn-sm" data-road-tick="${s.k}">${ok ? "Done ✓" : "Mark done"}</button>`
+          : `<button class="btn btn-sm ${cur ? "btn-primary" : ""}" data-tab-link="${s.tab}">${ok ? "Open" : "Go →"}</button>`}
+      </li>`;
+    }).join("");
+    $$("[data-road-tick]").forEach((b) => b.addEventListener("click", () => {
+      roadTicks.has(b.dataset.roadTick) ? roadTicks.delete(b.dataset.roadTick) : roadTicks.add(b.dataset.roadTick);
+      store.set("ic_road", [...roadTicks]);
+      renderDashboard();
+    }));
+    $("#phase2").innerHTML = [
+      ["order", "Buy a Machine", "Which machine, where to order, your discount code."],
+      ["suppliers", "Suppliers & Ordering", "Where to get cards and squishies, and how much to order."],
+      ["setup", "Set Up Machine", "Unbox, set up and install it at the store."],
+      ["care", "Restock & Care", "Your checklist for every visit, so it keeps selling."],
+    ].map(([t, a, b]) => `<button class="card card-hover tool-card" data-tab="${t}"><span class="card-title">${esc(a)}</span><span class="small t3">${esc(b)}</span></button>`).join("");
+    const machines = Number(profile?.machines) || 0;
+    const yeses = leads.list.filter((l) => l.status === "yes" || l.status === "placed").length;
+    $("#dashStats").innerHTML = `
+      <div class="stat"><span class="label">Machines placed</span><div class="stat-num gold-num pop"><span data-count="${machines}">0</span></div><p class="stat-cap">${esc(profile?.goal ? profile.goal.slice(0, 60) : "Set a goal in your profile")}</p></div>
+      <div class="stat"><span class="label">Spots saved</span><div class="stat-num sm"><span data-count="${leads.list.length}">0</span></div><p class="stat-cap">${yeses} said yes</p></div>
+      <div class="stat"><span class="label">Pushback mastered</span><div class="stat-num sm okc"><span data-count="${mastered.size}">0</span><small class="t4" style="font-size:.5em">/${OBJECTIONS.length}</small></div><p class="stat-cap">Practice in Practice Pushback</p></div>`;
+    countUps($("#dashStats"));
+  }
+
+  // =================================================================== "HOW THIS PAGE WORKS" on every page
+  const PAGE_HELP = {
+    finder: ["Find businesses near you that are good spots for a machine.", ["Type your city (or press Use my location) and press Set.", "Press Find locations. The best spots are at the top.", "Tick the ones you like and press Save to My Leads."]],
+    dwell: ["See if a spot is worth calling before you spend time on it.", ["Paste the business's Google Maps link, or answer the questions yourself.", "Press Check this spot.", "Green: call them. Yellow: visit first. Red: skip it."]],
+    leads: ["Every spot you saved, in one list. This is where you track your calls.", ["Press the phone number or Google Maps to look a spot up.", "After each call, change the status (no answer, said no, said yes...).", "Press Notes & owner to write down the owner's name and when to call back."]],
+    skiptrace: ["Our team finds the owner's name and cell number for you.", ["In My Leads, tick the spots and press Send to Skip & Trace.", "Email or text that file to the team (contact below).", "When they send it back, press Import results. The owners show up in My Leads."]],
+    calling: ["Learn what to say when the owner picks up.", ["Watch the two videos.", "Read the script. Keep it open while you call.", "Owner pushing back? Go to Practice Pushback."]],
+    objections: ["Practice what to say when an owner says no or \"send me info\".", ["Read the list once.", "Press Flashcards: say your answer out loud, then check it.", "Do the Quiz until you get most right."]],
+    analyzer: ["Get your calls graded by our AI coach inside Claude.", ["Follow the 5 steps once to connect it.", "Copy one of the prompts.", "Paste your call and send. You get a score and what to say next time."]],
+    yes: ["What to do the moment an owner says yes.", ["Before you hang up, confirm the 4 things in the list.", "Send the agreement the same day.", "Copy the emails and send them at the right time."]],
+    order: ["Buy your machine the right way, with our discount.", ["Copy your discount code.", "Follow the ordering steps.", "Watch the video if you get stuck."]],
+    suppliers: ["Where to get your machine, cards and squishies, and how much to order.", ["Pick a tab: Machines, Pokémon cards or Squishies.", "Use How much should I order? to get your number.", "Copy the message and send it to the supplier."]],
+    setup: ["Get your machine from the box into the store.", ["Watch the 4 videos in order.", "Tick the checklist as you go.", "Send the owner a photo when it's installed."]],
+    care: ["Keep your machine full, clean and working so it keeps making money.", ["Do the checklist every time you visit.", "Use the calculator to know how much to reorder.", "Something broken? Watch the fix-it video."]],
+    trends: ["What's selling right now, from our team every week.", ["Read the newest post at the top.", "Use it when you restock.", "Check back every week."]],
+  };
+  function addPageHelp() {
+    for (const [tab, [what, steps]] of Object.entries(PAGE_HELP)) {
+      const hero = $(`#tab-${tab} .hero`);
+      if (!hero || $(`#tab-${tab} .help-box`)) continue;
+      const video = PAGE_VIDEOS[tab];
+      hero.insertAdjacentHTML("afterend", `<details class="card help-box" ${store.get("ic_help_seen", []).includes(tab) ? "" : "open"} data-help="${tab}">
+        <summary><span class="help-q" aria-hidden="true">?</span><b>How this page works</b><span class="small t3 grow">${esc(what)}</span></summary>
+        <ol class="help-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
+        ${video ? `<a class="btn btn-sm" href="${esc(video)}" target="_blank" rel="noopener">▶ Watch how (1 min)</a>` : ""}
+      </details>`);
+    }
+    // Open the first time; once closed it stays closed for that page.
+    $$(".help-box").forEach((d) => d.addEventListener("toggle", () => {
+      const seen = new Set(store.get("ic_help_seen", []));
+      d.open ? seen.delete(d.dataset.help) : seen.add(d.dataset.help);
+      store.set("ic_help_seen", [...seen]);
+    }));
+  }
+
+  // =================================================================== HOW MUCH TO ORDER (calculator)
+  function calcHTML(id) {
+    const d = ORDER_CALC;
+    const f = (k, label, hint) => `<label><span class="label">${label}</span><input type="number" min="0" inputmode="numeric" id="${id}_${k}" data-calc="${k}" value="${d[k] ?? ""}" placeholder="${hint}"></label>`;
+    return `<div class="card calc" data-calc-box="${id}">
+      <p class="card-title">How much should I order?</p>
+      <p class="small t3">Type your machine's numbers. Not sure? Ask the team or check your machine's manual.</p>
+      <div class="calc-grid">
+        ${f("slots", "Slots in your machine", "e.g. 20")}
+        ${f("perSlot", "Items that fit in one slot", "e.g. 8")}
+        ${f("perWeek", "Items you sell per week", "your best guess")}
+        ${f("weeks", "Weeks until your next order", "e.g. 2")}
+      </div>
+      <div class="calc-out" id="${id}_out"></div>
+    </div>`;
+  }
+  function bindCalc(root) {
+    $$("[data-calc-box]", root).forEach((box) => {
+      const id = box.dataset.calcBox;
+      const run = () => {
+        const v = (k) => Number($(`#${id}_${k}`).value) || 0;
+        const cap = v("slots") * v("perSlot");
+        const reorder = Math.ceil(v("perWeek") * v("weeks") * 1.2);
+        const parts = [];
+        if (cap) parts.push(`<div><span class="label">First fill (empty machine)</span><b class="calc-n">${cap}</b> items</div>`);
+        if (reorder) parts.push(`<div><span class="label">Each reorder</span><b class="calc-n">${cap ? Math.min(reorder, cap) : reorder}</b> items</div>`);
+        $(`#${id}_out`).innerHTML = parts.length
+          ? parts.join("") + `<p class="small t4 full">Reorder = items per week × weeks × 1.2 (a little extra so you never run empty)${cap && reorder > cap ? ", capped at what fits in the machine" : ""}.</p>`
+          : `<p class="small t4 full">Fill in the boxes and your numbers show up here.</p>`;
+      };
+      $$("[data-calc]", box).forEach((i) => i.addEventListener("input", run));
+      run();
+    });
+  }
+
+  // =================================================================== RESTOCK & CARE
+  const CARE_CHECKS = [
+    ["Every visit", ["Check how much sold since last time", "Refill empty slots, best sellers at the front", "Wipe the glass and the keypad", "Test one payment (card or tap)", "Check the power light and Wi-Fi", "Say hi to the owner and ask how it's going"]],
+    ["Every month", ["Pay the owner their share on time", "Swap slow sellers for what's on What's Selling", "Write down this month's sales"]],
+  ];
+  const careDone = new Set(store.get("ic_care_checks", []));
+  function renderCare() {
+    const total = CARE_CHECKS.reduce((n, [, items]) => n + items.length, 0);
+    $("#careBody").innerHTML =
+      block("Watch how", `<div class="video-grid">${CARE_VIDEOS.map(videoCard).join("")}</div>`) +
+      block(`Visit checklist · <span id="careCount">${careDone.size}</span> of ${total}`, `<div class="card setup-list">${CARE_CHECKS.map(([g, items], gi) => `
+        <div class="setup-group"><p class="step-t">${esc(g)}</p>${items.map((t, ii) => {
+          const k = `${gi}.${ii}`;
+          return `<label class="check-row"><input type="checkbox" id="care${gi}_${ii}" data-care="${k}" ${careDone.has(k) ? "checked" : ""}><span>${esc(t)}</span></label>`;
+        }).join("")}</div>`).join("")}
+        <div class="obj-actions"><button class="btn btn-sm" id="careReset" type="button">Start a new visit</button></div></div>`) +
+      block("Reorder", calcHTML("careCalc") + `<p class="t3" style="margin-top:12px">Running low? <a href="#" data-tab-link="suppliers">Order from our suppliers →</a></p>`);
+    $$("[data-care]", $("#careBody")).forEach((c) => c.addEventListener("change", () => {
+      c.checked ? careDone.add(c.dataset.care) : careDone.delete(c.dataset.care);
+      store.set("ic_care_checks", [...careDone]);
+      $("#careCount").textContent = careDone.size;
+    }));
+    $("#careReset").addEventListener("click", () => { careDone.clear(); store.set("ic_care_checks", []); renderCare(); });
+    bindCalc($("#careBody"));
+    observeReveals($("#careBody"));
+  }
+
   // =================================================================== OBJECTIONS
   // What owners say on the phone and how Gage answers (from his calls and videos, the same method the
   // old call coach graded against). `say` is the line to use, `why` the reasoning, `traps` the common
@@ -1930,7 +2089,9 @@
         ["Email or call them with the message below", "Mention the program if the list says there's a program deal."],
         ["Confirm price, minimum order and shipping time", "Get it in writing before you pay."],
         ["Order and log it", "Write down the order date, what you ordered and the tracking number."],
-      ])}</div>` + copyBlock(`Subject: Wholesale order: ${what}\n\nHi,\n\nI run Pokémon card vending machines in [city] and I'm looking to order ${what} from you.\n\nCould you send me:\n- Your wholesale price list\n- Minimum order quantity\n- Shipping cost and time to [ZIP]\n- Whether you offer repeat-order or volume pricing\n\nThanks,\n[Your name]\n[Your phone]`, { label: "Message to send" }));
+      ])}</div>` + copyBlock(`Subject: Wholesale order: ${what}\n\nHi,\n\nI run Pokémon card vending machines in [city] and I'm looking to order ${what} from you.\n\nCould you send me:\n- Your wholesale price list\n- Minimum order quantity\n- Shipping cost and time to [ZIP]\n- Whether you offer repeat-order or volume pricing\n\nThanks,\n[Your name]\n[Your phone]`, { label: "Message to send" })) +
+      (s.key === "machines" ? "" : block(`How much ${esc(s.title.toLowerCase())} to order`, calcHTML("supCalc")));
+    bindCalc($("#supplierBody"));
     observeReveals($("#supplierBody"));
   }
 
