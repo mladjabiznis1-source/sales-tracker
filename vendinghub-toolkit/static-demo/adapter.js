@@ -39,7 +39,7 @@
       let lastErr;
       for (const m of MIRRORS) {
         try {
-          const res = await fetch(m, { method: "POST", body: new URLSearchParams({ data: q }) });
+          const res = await fetch(m, { method: "POST", body: new URLSearchParams({ data: q }), signal: AbortSignal.timeout(12000) }); // slow mirror: try the next
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return toRows(kind, (await res.json()).elements || []);
         } catch (e) { lastErr = e; }
@@ -116,11 +116,22 @@
     }
     if (path === "/api/place-lookup") {
       const link = u.searchParams.get("url") || "";
-      const at = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || link.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) || link.match(/[?&](?:q|ll|query)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+      const at = link.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) || link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || link.match(/[?&](?:q|ll|query)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
       const nm = (link.match(/\/place\/([^/@?]+)/) || [])[1];
-      if (!at) return json({ error: /goo\.gl|g\.co/.test(link)
-        ? "Short links need the full site. Open the link in your browser, copy the full address from the address bar (google.com/maps/place/...) and paste that here."
-        : "Couldn't find the location in that link. Open the business in Google Maps and copy the full address from the address bar." }, 400);
+      if (!at) {
+        // No coordinates: look the business up by name. Text shared from a phone often has the name before the link.
+        const text = link.replace(/https?:\/\/\S+/g, " ").replace(/\s+/g, " ").trim();
+        if (!text) return json({ error: "This short link can't be opened on this version. Type the business name and city instead, e.g. Speedy Mart, Oakland CA." }, 400);
+        const near = centers()[0];
+        const box = near ? `&viewbox=${near.lng - 0.6},${near.lat + 0.45},${near.lng + 0.6},${near.lat - 0.45}` : "";
+        let hits = [];
+        try { hits = await (await real(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us${box}&q=${encodeURIComponent(text)}`, { signal: AbortSignal.timeout(10000) })).json(); } catch {}
+        if (!hits.length && box) try { hits = await (await real(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&q=${encodeURIComponent(text)}`, { signal: AbortSignal.timeout(10000) })).json(); } catch {}
+        if (!hits.length) return json({ error: "Couldn't find that business. Add the city (e.g. Speedy Mart, Oakland CA), or answer the questions below." }, 400);
+        const h = hits[0], lat = Number(h.lat), lng = Number(h.lon);
+        lastPlace = { lat, lng, label: "" };
+        return json({ name: h.name || text.split(",")[0].trim(), lat, lng, address: h.display_name || "", income: null, tract: null });
+      }
       const lat = Number(at[1]), lng = Number(at[2]);
       lastPlace = { lat, lng, label: "" };
       const name = nm ? decodeURIComponent(nm.replace(/\+/g, " ")).split(",")[0].trim() : "";
@@ -129,6 +140,14 @@
     if (path.startsWith("/api/")) return json({ error: "Not available on this version." }, 404);
     if (path === "/places/index.json") return json(index);
     const m = path.match(/^\/places\/(core|rest|cards)\/(-?\d+)_(-?\d+)\.json$/);
+    const nearQ = (u.searchParams.get("near") || "").split(",").map(Number);
+    if (m && nearQ.length === 3 && nearQ.every(Number.isFinite)) {
+      // Dwell Check: just the small circle around one business (fast), not the whole tile.
+      const [lat, lng, r] = nearQ;
+      if (Math.floor(lat) !== Number(m[2]) || Math.floor(lng) !== Number(m[3])) return json([]);
+      try { return json(await overpass(m[1], { lat, lng, r })); }
+      catch { return json({ error: "OpenStreetMap is busy." }, 503); }
+    }
     if (m) {
       try { return json(await tile(m[1], Number(m[2]), Number(m[3]))); }
       catch { return json({ error: "OpenStreetMap is busy. Try again in a minute." }, 503); }

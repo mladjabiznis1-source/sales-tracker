@@ -79,8 +79,9 @@
   const SKIP_TRACE = { loom: "", email: "", phone: "", text: "", hours: "", turnaround: "" };
   // Start Here: the welcome video every new student watches first (Loom share link).
   const ONBOARDING = { welcomeLoom: "" };
-  // Optional short "how this page works" video per page (any link: Loom, YouTube...). Empty = no button.
-  const PAGE_VIDEOS = { finder: "", dwell: "", leads: "", skiptrace: "", calling: "", objections: "", analyzer: "", yes: "", order: "", suppliers: "", setup: "", care: "", trends: "" };
+  // The video at the top of every page: what the page is for and how to use it (Loom share link).
+  // Empty shows a "Video coming soon" card. Gage Q&A and Find the Owner also accept GAGE_QA.loom / SKIP_TRACE.loom.
+  const PAGE_VIDEOS = { gage: "", finder: "", dwell: "", leads: "", skiptrace: "", calling: "", objections: "", analyzer: "", yes: "", order: "", suppliers: "", setup: "", care: "", trends: "" };
   // Restock & Care videos (Loom share links).
   const CARE_VIDEOS = [
     { title: "Load products into the machine", sub: "How to fill each slot so nothing jams.", url: "" },
@@ -748,13 +749,13 @@
   const CARD_RADIUS_MI = 2; // shops listed within this; only those within 1 mile count against the spot
   const CARD_SHOP = /card|pok[eé]mon|\btcg\b|comic|game|collect/i;
   const tileCache = new Map();
-  async function loadTile(kind, la, lo) {
-    const key = `${kind}/${la}_${lo}`;
+  async function loadTile(kind, la, lo, near = "") {
+    const key = `${kind}/${la}_${lo}${near}`;
     if (!tileCache.has(key)) {
       tileCache.set(key, (async () => {
         if (!finder.index) await loadIndex();
         if (!finder.index.tiles[kind]?.[`${la}_${lo}`]) return [];
-        const r = await fetch(`places/${kind}/${la}_${lo}.json`);
+        const r = await fetch(`places/${kind}/${la}_${lo}.json${near}`);
         return r.ok ? r.json() : [];
       })());
     }
@@ -765,7 +766,8 @@
     const dLat = mi / 69, dLng = mi / (69.172 * Math.max(0.05, Math.cos(rad(lat))));
     const jobs = [];
     for (let la = Math.floor(lat - dLat); la <= Math.floor(lat + dLat); la++)
-      for (let lo = Math.floor(lng - dLng); lo <= Math.floor(lng + dLng); lo++) jobs.push(loadTile(kind, la, lo));
+      // ?near= lets the no-server version ask for just this small area instead of a whole tile.
+      for (let lo = Math.floor(lng - dLng); lo <= Math.floor(lng + dLng); lo++) jobs.push(loadTile(kind, la, lo, `?near=${lat.toFixed(5)},${lng.toFixed(5)},${mi}`));
     return (await Promise.all(jobs)).flat();
   }
   const normName = (s) => (s || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 1 && !["the", "and", "inc", "llc"].includes(w));
@@ -799,9 +801,12 @@
     const place = await apiJSON(`/api/place-lookup?url=${encodeURIComponent(link)}`);
     msg.textContent = `Found ${place.name || "the spot"}. Checking the area…`;
 
-    const [core, rest, cards] = await Promise.all([
-      rowsNear("core", place.lat, place.lng, 0.3), rowsNear("rest", place.lat, place.lng, 0.3), rowsNear("cards", place.lat, place.lng, CARD_RADIUS_MI),
-    ]);
+    // Never hang: if the area data is slow or down, give the verdict from the business itself.
+    let areaOk = true;
+    const [core, rest, cards] = await Promise.race([
+      Promise.all([rowsNear("core", place.lat, place.lng, 0.3), rowsNear("rest", place.lat, place.lng, 0.3), rowsNear("cards", place.lat, place.lng, CARD_RADIUS_MI)]),
+      new Promise((ok) => setTimeout(() => ok(null), 15000)),
+    ]).catch(() => null).then((r) => r || ((areaOk = false), [[], [], []]));
     // Match the pasted business to our data: closest place with a similar name within ~0.25 mi.
     let match = null, best = 0;
     for (const row of [...core, ...rest]) {
@@ -839,6 +844,7 @@
       phone: match?.row[4] || "",
       income: place.income,
       cards: nearCards.slice(0, 3),
+      areaOk,
       link,
       lat: place.lat, lng: place.lng,
     };
@@ -851,7 +857,7 @@
     if (!a) return "";
     const typeLabel = DWELL_TYPES.find((t) => t.v === rec.type)?.label ?? "Unknown";
     const inc = a.income == null ? "Not available" : `$${a.income.toLocaleString()} median household income${a.income >= 150000 ? " (wealthy area)" : a.income >= 100000 ? " (above average)" : ""}`;
-    const cardsLine = a.cards.length
+    const cardsLine = a.areaOk === false ? "Couldn't check right now. Search Google Maps for \"card shop\" near the spot." : a.cards.length
       ? a.cards.map((c) => `${esc(c.name)} (${c.d.toFixed(1)} mi)`).join(", ")
       : `None found within ${CARD_RADIUS_MI} miles`;
     return `<div class="section reveal"><h2 class="section-title">What we checked</h2>
@@ -868,9 +874,9 @@
   function renderDwellForm(pre = {}) {
     const ans = pre.answers || {};
     $("#dwellForm").innerHTML = `
-      <div class="dq link-box"><span class="label">Fastest: paste a Google Maps link</span>
-        <div class="addr-form"><input id="dwellLink" placeholder="https://maps.app.goo.gl/…" inputmode="url" value="${esc(pre.auto?.link || "")}"><button type="button" class="btn btn-primary" id="dwellLinkGo">Check link</button></div>
-        <span class="small t4" id="dwellLinkMsg">In Google Maps: open the business → Share → Copy link.</span></div>
+      <div class="dq link-box"><span class="label">Fastest: paste a Google Maps link, or type the business name and city</span>
+        <div class="addr-form"><input id="dwellLink" placeholder="Google Maps link, or e.g. Speedy Mart, Oakland CA" value="${esc(pre.auto?.link || "")}"><button type="button" class="btn btn-primary" id="dwellLinkGo">Check it</button></div>
+        <span class="small t4" id="dwellLinkMsg">Takes about 5 seconds. On a computer, open the business in Google Maps and copy the address bar.</span></div>
       <div class="or-line"><span>or answer the questions</span></div>
       <label class="dq full"><span class="label">Business name (optional)</span><input name="name" maxlength="120" value="${esc(pre.name || "")}" placeholder="e.g. Speedy Mart on Telegraph"></label>
       <div class="dq"><span class="label">What kind of place?</span>
@@ -882,7 +888,7 @@
   async function runLinkCheck() {
     const link = $("#dwellLink").value.trim();
     const msg = $("#dwellLinkMsg");
-    if (!link) return (msg.textContent = "Paste a Google Maps link first.");
+    if (!link) return (msg.textContent = "Paste a Google Maps link or type the business name and city first.");
     $("#dwellLinkGo").disabled = true;
     try {
       const { name, type, answers, auto } = await autoDwell(link);
@@ -1572,7 +1578,6 @@
     const t = SKIP_TRACE;
     const contacts = [["Email", t.email], ["Phone", t.phone], ["Text / WhatsApp", t.text], ["Hours", t.hours], ["Turnaround", t.turnaround]].filter(([, v]) => v);
     $("#skipBody").innerHTML =
-      block("Watch first", `<div class="video-grid one">${videoCard({ title: "How the Skip & Trace team works", sub: "What to send, what you get back, and how long it takes.", url: t.loom })}</div>`) +
       block("Contact the team", contacts.length
         ? `<div class="card contact-card">${contacts.map(([k, v]) => k === "Hours" || k === "Turnaround" ? `<div class="contact-row"><span class="label">${k}</span><p class="t1">${esc(v)}</p></div>` : copyBlock(v, { label: k })).join("")}</div>`
         : emptyCard("Coming soon", "Team contact", "The team's email and phone number will be posted here.")) +
@@ -1707,7 +1712,7 @@
   // =================================================================== "HOW THIS PAGE WORKS" on every page
   const PAGE_HELP = {
     finder: ["Find businesses near you that are good spots for a machine.", ["Type your city (or press Use my location) and press Set.", "Press Find locations. The best spots are at the top.", "Tick the ones you like and press Save to My Leads."]],
-    dwell: ["See if a spot is worth calling before you spend time on it.", ["Paste the business's Google Maps link, or answer the questions yourself.", "Press Check this spot.", "Green: call them. Yellow: visit first. Red: skip it."]],
+    dwell: ["See if a spot is worth calling before you spend time on it.", ["Paste the business's Google Maps link, or type its name and city (e.g. Speedy Mart, Oakland CA).", "Press Check it. You get an answer in a few seconds.", "Green: call them. Yellow: visit first. Red: skip it."]],
     leads: ["Every spot you saved, in one list. This is where you track your calls.", ["Press the phone number or Google Maps to look a spot up.", "After each call, change the status (no answer, said no, said yes...).", "Press Notes & owner to write down the owner's name and when to call back."]],
     skiptrace: ["Our team finds the owner's name and cell number for you.", ["In My Leads, tick the spots and press Send to Skip & Trace.", "Email or text that file to the team (contact below).", "When they send it back, press Import results. The owners show up in My Leads."]],
     calling: ["Learn what to say when the owner picks up.", ["Watch the two videos.", "Read the script. Keep it open while you call.", "Owner pushing back? Go to Call Training."]],
@@ -1752,7 +1757,6 @@
     const plain = (label, inner) => `<div class="section-tight"><p class="label">${label}</p>${inner}</div>`;
     const g = GAGE_QA, app = g.chatApp ? ` in ${esc(g.chatApp)}` : "", nm = g.chatName ? ` called <b>${esc(g.chatName)}</b>` : "";
     $("#gageBody").innerHTML =
-      plain("Watch first", `<div class="video-grid one">${videoCard({ title: "How to use Gage", sub: "What to ask, when to ask, and how to get a fast answer.", url: g.loom })}</div>`) +
       plain("Gage's number", g.phone
         ? `<div class="card contact-card">${copyBlock(g.phone, { label: "Text or call Gage" })}<a class="btn btn-primary" href="sms:${esc(g.phone.replace(/[^+\d]/g, ""))}">Text Gage</a></div>`
         : emptyCard("Coming soon", "Gage's number", "Gage's number will be posted here.")) +
@@ -1795,11 +1799,12 @@
     for (const [tab, [what, steps]] of Object.entries(PAGE_HELP)) {
       const hero = $(`#tab-${tab} .hero`);
       if (!hero || $(`#tab-${tab} .help-box`)) continue;
-      const video = PAGE_VIDEOS[tab];
-      hero.insertAdjacentHTML("afterend", `<details class="card help-box" ${store.get("ic_help_seen", []).includes(tab) ? "" : "open"} data-help="${tab}">
-        <summary><span class="help-q" aria-hidden="true">?</span><b>How this page works</b><span class="small t3 grow">${esc(what)}</span></summary>
+      const video = PAGE_VIDEOS[tab] || (tab === "gage" ? GAGE_QA.loom : tab === "skiptrace" ? SKIP_TRACE.loom : "");
+      // Video first (what the page is for and how to use it), then the same thing written down.
+      hero.insertAdjacentHTML("afterend", `<div class="page-video"><p class="label">Watch first: what this page is for and how to use it</p>
+        <div class="video-grid one">${videoCard({ title: `How to use ${TOOL_NAMES[tab]}`, sub: what, url: video })}</div></div><details class="card help-box" ${store.get("ic_help_seen", []).includes(tab) ? "" : "open"} data-help="${tab}">
+        <summary><span class="help-q" aria-hidden="true">?</span><b class="grow">Prefer to read? How this page works</b></summary>
         <ol class="help-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
-        ${video ? `<a class="btn btn-sm" href="${esc(video)}" target="_blank" rel="noopener">▶ Watch how (1 min)</a>` : ""}
         ${tab === "gage" ? "" : `<p class="help-ask small t3">Still stuck? <a href="#" data-tab-link="gage">Ask Gage →</a></p>`}
       </details>`);
     }

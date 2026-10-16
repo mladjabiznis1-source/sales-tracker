@@ -645,3 +645,5 @@ details.transcript pre { white-space: pre-wrap; font-family: 'Inter', sans-serif
 .howto-item p { margin: 4px 0 0; }
 .howto-cta { grid-column: 1 / -1; }
 @media (max-width: 640px) { .help-ask { margin-left: 20px; } }
+.page-video { margin: 0 0 20px; }
+.page-video .video-grid.one { max-width: 720px; }
