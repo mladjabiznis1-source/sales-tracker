@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="styles.css?v=15">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Crect x='18' y='10' width='28' height='44' rx='5' fill='none' stroke='%23F5B301' stroke-width='4'/%3E%3Crect x='24' y='17' width='16' height='14' rx='2' fill='%23F5B301'/%3E%3Ccircle cx='32' cy='43' r='4' fill='%23F5B301'/%3E%3C/svg%3E">
 </head>
 <body>
@@ -54,23 +54,22 @@
   <aside id="sidebar" class="sidebar" aria-label="Main menu">
     <div class="side-brand"><span class="wordmark">VendingHub <b>Toolkit</b></span></div>
     <nav class="side-nav">
-      <button class="nav-item" data-tab="dashboard"><span class="nav-ico" aria-hidden="true">◧</span>Dashboard</button>
-      <span class="label nav-label">Find the spot</span>
-      <button class="nav-item" data-tab="finder"><span class="nav-ico" aria-hidden="true">⌖</span>Locations</button>
-      <button class="nav-item" data-tab="dwell"><span class="nav-ico" aria-hidden="true">◎</span>Dwell Check</button>
-      <span class="label nav-label">Get the owner</span>
-      <button class="nav-item" data-tab="leads"><span class="nav-ico" aria-hidden="true">☰</span>My Leads</button>
-      <button class="nav-item" data-tab="skiptrace"><span class="nav-ico" aria-hidden="true">⌕</span>Skip &amp; Trace Team</button>
-      <button class="nav-item" data-tab="calling"><span class="nav-ico" aria-hidden="true">☏</span>Cold Calling</button>
-      <button class="nav-item" data-tab="objections"><span class="nav-ico" aria-hidden="true">⇄</span>Objections</button>
-      <button class="nav-item" data-tab="analyzer"><span class="nav-ico" aria-hidden="true">✦</span>Call Analyzer</button>
-      <button class="nav-item" data-tab="yes"><span class="nav-ico" aria-hidden="true">✓</span>Got a Yes</button>
-      <span class="label nav-label">Stock and install</span>
-      <button class="nav-item" data-tab="order"><span class="nav-ico" aria-hidden="true">◇</span>Order a Machine</button>
-      <button class="nav-item" data-tab="suppliers"><span class="nav-ico" aria-hidden="true">▦</span>Suppliers</button>
-      <button class="nav-item" data-tab="setup"><span class="nav-ico" aria-hidden="true">⚙</span>Setup &amp; Install</button>
-      <span class="label nav-label">Stay sharp</span>
-      <button class="nav-item" data-tab="trends"><span class="nav-ico" aria-hidden="true">↗</span>Trends</button>
+      <button class="nav-item nav-start" data-tab="dashboard"><span class="nav-ico" aria-hidden="true">★</span>Start Here</button>
+      <span class="label nav-label">Get your first machine</span>
+      <button class="nav-item" data-tab="finder"><span class="nav-num" aria-hidden="true">1</span>Find Spots</button>
+      <button class="nav-item" data-tab="dwell"><span class="nav-num" aria-hidden="true">2</span>Check a Spot</button>
+      <button class="nav-item" data-tab="leads"><span class="nav-num" aria-hidden="true">3</span>My Leads</button>
+      <button class="nav-item" data-tab="skiptrace"><span class="nav-num" aria-hidden="true">4</span>Find the Owner</button>
+      <button class="nav-item" data-tab="calling"><span class="nav-num" aria-hidden="true">5</span>Call Scripts</button>
+      <button class="nav-item" data-tab="objections"><span class="nav-num" aria-hidden="true">6</span>Practice Pushback</button>
+      <button class="nav-item" data-tab="analyzer"><span class="nav-num" aria-hidden="true">7</span>Grade My Calls</button>
+      <button class="nav-item" data-tab="yes"><span class="nav-num" aria-hidden="true">8</span>They Said Yes</button>
+      <span class="label nav-label">Run your machine</span>
+      <button class="nav-item" data-tab="order"><span class="nav-ico" aria-hidden="true">◇</span>Buy a Machine</button>
+      <button class="nav-item" data-tab="suppliers"><span class="nav-ico" aria-hidden="true">▦</span>Suppliers &amp; Ordering</button>
+      <button class="nav-item" data-tab="setup"><span class="nav-ico" aria-hidden="true">⚙</span>Set Up Machine</button>
+      <button class="nav-item" data-tab="care"><span class="nav-ico" aria-hidden="true">♻</span>Restock &amp; Care</button>
+      <button class="nav-item" data-tab="trends"><span class="nav-ico" aria-hidden="true">↗</span>What's Selling</button>
     </nav>
     <div class="side-foot">
       <button class="side-profile" data-tab="profile">
@@ -81,32 +80,31 @@
     </div>
   </aside>
   <main>
-    <!-- ================= DASHBOARD ================= -->
-    <section id="tab-dashboard" class="tab-panel" aria-label="Dashboard" hidden>
-      <div class="hero glow-zone">
+    <!-- ================= START HERE ================= -->
+    <section id="tab-dashboard" class="tab-panel" aria-label="Start Here" hidden>
+      <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Dashboard</p>
-        <h1 class="hero-title hero-in">Welcome back, <span class="gold" id="dashName">you</span>.</h1>
-        <p class="hero-sub hero-in" id="dashSub">Here's where you're at. Pick a tool to keep moving.</p>
+        <p class="eyebrow hero-in">Start here</p>
+        <h1 class="hero-title hero-in">Hi <span class="gold" id="dashName">there</span>. Let's get your first machine.</h1>
+        <p class="hero-sub hero-in">Everything you need is on this site. Follow the steps below in order. Each one opens the right page and shows you exactly what to do.</p>
       </div>
-      <div class="stats stagger" id="dashStats"></div>
-      <div class="section reveal">
-        <h2 class="section-title">Your path</h2>
-        <p class="section-lead">Eight steps from an empty map to a stocked machine on location. Work through them in order.</p>
-        <div class="tool-grid stagger">
-          <button class="card card-hover tool-card" data-tab="finder"><span class="marker">01</span><span class="card-title">Find locations</span><span class="small t3">Every spot Gage recommends near you, with phone numbers.</span></button>
-          <button class="card card-hover tool-card" data-tab="dwell"><span class="marker">02</span><span class="card-title">Check the spot</span><span class="small t3">Green, yellow or red on Gage's rules, plus 100 proven spots to learn from.</span></button>
-          <button class="card card-hover tool-card" data-tab="calling"><span class="marker">03</span><span class="card-title">Call the owner</span><span class="small t3">Watch how it's done, then keep the script open while you dial.</span></button>
-          <button class="card card-hover tool-card" data-tab="objections"><span class="marker">04</span><span class="card-title">Handle pushback</span><span class="small t3">Drill what owners say until the answers come out on their own.</span></button>
-          <button class="card card-hover tool-card" data-tab="yes"><span class="marker">05</span><span class="card-title">Lock in the yes</span><span class="small t3">Send the agreement and the follow-up emails the same day.</span></button>
-          <button class="card card-hover tool-card" data-tab="order"><span class="marker">06</span><span class="card-title">Order the machine</span><span class="small t3">Step by step with our supplier, plus your discount code.</span></button>
-          <button class="card card-hover tool-card" data-tab="setup"><span class="marker">07</span><span class="card-title">Set it up</span><span class="small t3">Unbox, set up, transport and install it on location.</span></button>
-          <button class="card card-hover tool-card" data-tab="trends"><span class="marker">08</span><span class="card-title">Stay on trend</span><span class="small t3">What's selling right now. New update every week.</span></button>
-        </div>
+      <div id="nextStep"></div>
+      <div class="section-tight">
+        <p class="label">Watch this first (5 minutes)</p>
+        <div id="startVideo" class="video-grid one"></div>
       </div>
-      <div class="section reveal">
-        <h2 class="section-title">Recent spot checks</h2>
-        <div id="dashChecks" class="table" style="margin-top:22px"></div>
+      <div class="section-tight">
+        <div class="road-head"><p class="label">Your road to machine #1</p><span id="roadCount" class="small t3"></span></div>
+        <div class="bar road-bar"><div id="roadBar" class="bar-fill"></div></div>
+        <ol id="road" class="road"></ol>
+      </div>
+      <div class="section-tight">
+        <p class="label">After you land your machine</p>
+        <div id="phase2" class="tool-grid"></div>
+      </div>
+      <div class="section-tight">
+        <p class="label">Your numbers</p>
+        <div class="stats" id="dashStats"></div>
       </div>
     </section>
 
@@ -252,6 +250,17 @@
       <div id="setupBody"></div>
     </section>
 
+    <!-- ================= RESTOCK & CARE ================= -->
+    <section id="tab-care" class="tab-panel" aria-label="Restock and Care" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Restock &amp; care</p>
+        <h1 class="hero-title hero-in">Keep it full. Keep it <span class="gold">selling.</span></h1>
+        <p class="hero-sub hero-in">A machine only makes money when it's stocked, clean and working. Do this checklist every visit, and use the calculator to know how much to order.</p>
+      </div>
+      <div id="careBody"></div>
+    </section>
+
     <!-- ================= TRENDS ================= -->
     <section id="tab-trends" class="tab-panel" aria-label="Trends" hidden>
       <div class="hero hero-compact glow-zone">
@@ -367,6 +376,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 </body>
 </html>
