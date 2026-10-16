@@ -1,0 +1,15 @@
+{
+  "name": "vendinghub-toolkit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pull-data": "node scripts/pull-live-data.mjs",
+    "deploy": "sh scripts/deploy.sh"
+  },
+  "dependencies": {
+    "@netlify/blobs": "11.1.4"
+  },
+  "devDependencies": {
+    "@netlify/edge-functions": "^4.0.2"
+  }
+}

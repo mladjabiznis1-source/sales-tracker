@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pack Placement Student Hub</title>
+<meta name="description" content="Pack Placement Student Hub: everything you need to get your first vending machine placed.">
+<meta name="theme-color" content="#0F1317">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="styles.css?v=21">
+<link rel="icon" href="icon.png">
+</head>
+<body>
+
+<!-- Ambient background: dot grid + soft vertical light rays (fixed, behind everything) -->
+<div class="ambient" aria-hidden="true">
+  <span class="ray"></span><span class="ray"></span><span class="ray"></span>
+  <span class="ray"></span><span class="ray"></span><span class="ray"></span>
+</div>
+
+<!-- ============ ACCESS GATE ============ -->
+<section id="gate" class="gate glow-zone" hidden>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="gate-inner">
+    <img class="gate-logo" src="logo.png" alt="Pack Placement">
+    <span class="badge">Student hub</span>
+    <h1 class="hero-title">Your road to your <span class="gold">first machine.</span></h1>
+    <p class="hero-sub">Your location finder, cold calling playbook and suppliers, in one place. Enter the access code from your onboarding.</p>
+    <div class="holo-border">
+      <form id="gateForm" class="gate-form holo-inner">
+        <input id="gateCode" type="password" autocomplete="current-password" placeholder="Access code" required aria-label="Access code">
+        <button class="btn btn-primary" type="submit">Enter</button>
+      </form>
+    </div>
+    <p id="gateErr" class="err" role="alert"></p>
+  </div>
+</section>
+
+<!-- ============ FIRST-TIME PROFILE SETUP ============ -->
+<section id="setup" class="gate glow-zone" hidden>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="gate-inner">
+    <span class="badge">Step 1 of 1</span>
+    <h1 class="hero-title">Set up your <span class="gold">profile.</span></h1>
+    <p class="hero-sub">Takes 30 seconds. Your code is your login, so keep it somewhere safe.</p>
+    <form id="setupForm" class="card profile-form" style="margin-top:34px"></form>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="app" hidden>
+  <aside id="sidebar" class="sidebar" aria-label="Main menu">
+    <div class="side-brand"><img class="brand-logo" src="logo.png" alt="Pack Placement"><span class="side-sub">Student Hub</span></div>
+    <nav class="side-nav">
+      <button class="nav-item nav-start" data-tab="dashboard"><span class="nav-ico" aria-hidden="true">★</span>Start Here</button>
+      <button class="nav-item" data-tab="gage"><span class="nav-ico" aria-hidden="true">?</span>Gage Q&amp;A</button>
+      <span class="label nav-label">Get your first machine</span>
+      <button class="nav-item" data-tab="finder"><span class="nav-ico" aria-hidden="true">⌕</span>Find Spots</button>
+      <button class="nav-item" data-tab="dwell"><span class="nav-ico" aria-hidden="true">✓</span>Dwell Check Location</button>
+      <button class="nav-item" data-tab="leads"><span class="nav-ico" aria-hidden="true">☰</span>My Leads</button>
+      <button class="nav-item" data-tab="skiptrace"><span class="nav-ico" aria-hidden="true">◎</span>Find the Owner</button>
+      <button class="nav-item" data-tab="calling"><span class="nav-ico" aria-hidden="true">☎</span>Cold Calling &amp; Scripts</button>
+      <button class="nav-item" data-tab="objections"><span class="nav-ico" aria-hidden="true">↻</span>Call Training</button>
+      <button class="nav-item" data-tab="analyzer"><span class="nav-ico" aria-hidden="true">✎</span>Call Reviewer</button>
+      <button class="nav-item" data-tab="yes"><span class="nav-ico" aria-hidden="true">✦</span>Agreements</button>
+      <span class="label nav-label">Run your machine</span>
+      <button class="nav-item" data-tab="order"><span class="nav-ico" aria-hidden="true">◇</span>Buy a Machine</button>
+      <button class="nav-item" data-tab="suppliers"><span class="nav-ico" aria-hidden="true">▦</span>Suppliers &amp; Ordering</button>
+      <button class="nav-item" data-tab="setup"><span class="nav-ico" aria-hidden="true">⚙</span>Set Up Machine</button>
+      <button class="nav-item" data-tab="care"><span class="nav-ico" aria-hidden="true">♻</span>Restock &amp; Care</button>
+      <button class="nav-item" data-tab="trends"><span class="nav-ico" aria-hidden="true">↗</span>What's Selling</button>
+    </nav>
+    <div class="side-foot">
+      <button class="side-profile" data-tab="profile">
+        <span class="avatar sm" id="sideAvatar" aria-hidden="true">?</span>
+        <span class="grow"><b id="sideName">Your profile</b><small id="sideMeta">Edit profile</small></span>
+      </button>
+      <button id="logoutBtn" class="btn btn-sm side-logout">Log out</button>
+    </div>
+  </aside>
+  <main>
+    <!-- ================= START HERE ================= -->
+    <section id="tab-dashboard" class="tab-panel" aria-label="Start Here" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Start here</p>
+        <h1 class="hero-title hero-in">Hi <span class="gold" id="dashName">there</span>. Let's get your first machine.</h1>
+        <p class="hero-sub hero-in">Everything you need is on this site. Follow the steps below in order. Each one opens the right page and shows you exactly what to do.</p>
+      </div>
+      <div id="nextStep"></div>
+      <div class="section-tight">
+        <p class="label">Watch this first (5 minutes)</p>
+        <div id="startVideo" class="video-grid one"></div>
+      </div>
+      <div class="section-tight">
+        <p class="label">How to use this toolkit</p>
+        <div class="howto" id="howto"></div>
+      </div>
+      <div class="section-tight">
+        <div class="road-head"><p class="label">Your road to machine #1</p><span id="roadCount" class="small t3"></span></div>
+        <div class="bar road-bar"><div id="roadBar" class="bar-fill"></div></div>
+        <ol id="road" class="road"></ol>
+      </div>
+      <div class="section-tight">
+        <p class="label">After you land your machine</p>
+        <div id="phase2" class="tool-grid"></div>
+      </div>
+      <div class="section-tight">
+        <p class="label">Words you'll hear</p>
+        <div class="gloss" id="gloss"></div>
+      </div>
+      <div class="section-tight">
+        <p class="label">Your numbers</p>
+        <div class="stats" id="dashStats"></div>
+      </div>
+    </section>
+
+    <!-- ================= GAGE Q&A ================= -->
+    <section id="tab-gage" class="tab-panel" aria-label="Gage Q and A" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Gage Q&amp;A</p>
+        <h1 class="hero-title hero-in">Stuck? <span class="gold">Ask Gage.</span></h1>
+        <p class="hero-sub hero-in">You have a group chat with Gage. Ask him anything, any time. Here's how to find it, and how to ask so you get a fast, useful answer.</p>
+      </div>
+      <div id="gageBody"></div>
+    </section>
+
+    <!-- ================= DWELL CHECK ================= -->
+    <section id="tab-dwell" class="tab-panel" aria-label="Dwell Check" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Dwell Check Location</p>
+        <h1 class="hero-title hero-in">Is this a <span class="gold">good spot?</span></h1>
+        <p class="hero-sub hero-in">Answer a few quick questions about the business. You get green, yellow or red, based on what has worked, and what has failed, on Gage's own machines.</p>
+      </div>
+      <form id="dwellForm" class="card dwell-form reveal"></form>
+      <div id="dwellResult" hidden></div>
+      <div id="dwellHistoryWrap" class="history" hidden>
+        <p class="label">Your past checks</p>
+        <div id="dwellHistory" class="table"></div>
+      </div>
+      <div class="section-tight reveal" id="provenWrap">
+        <p class="label">100 proven spots</p>
+        <div id="provenBody"></div>
+      </div>
+    </section>
+
+    <!-- ================= MY LEADS (CRM) ================= -->
+    <section id="tab-leads" class="tab-panel wide" aria-label="My Leads" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">My Leads</p>
+        <h1 class="hero-title hero-in">Every spot, every <span class="gold">call.</span></h1>
+        <p class="hero-sub hero-in">Places you saved from Locations. Track who you called, who said no, who said yes, and when to follow up. Export any of them as a PDF or spreadsheet.</p>
+      </div>
+      <div id="leadPipe" class="pipe"></div>
+      <div id="leadTools" class="lead-tools"></div>
+      <div id="leadList"></div>
+    </section>
+
+    <!-- ================= SKIP & TRACE TEAM ================= -->
+    <section id="tab-skiptrace" class="tab-panel" aria-label="Skip and Trace Team" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Find the Owner</p>
+        <h1 class="hero-title hero-in">We find the <span class="gold">owner.</span></h1>
+        <p class="hero-sub hero-in">Send us the locations you want to call. Our team finds the owner's name and cell number so you skip the front desk and talk to the person who can say yes.</p>
+      </div>
+      <div id="skipBody"></div>
+    </section>
+
+    <!-- ================= COLD CALLING ================= -->
+    <section id="tab-calling" class="tab-panel" aria-label="Cold Calling" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Cold Calling &amp; Scripts</p>
+        <h1 class="hero-title hero-in">Get the <span class="gold">owner</span> on the phone.</h1>
+        <p class="hero-sub hero-in">Watch how a call is done and what a real one sounds like. Then keep the script open while you dial.</p>
+      </div>
+      <div class="section-tight reveal">
+        <p class="label">01 · Watch first</p>
+        <div id="loomList" class="video-grid"></div>
+      </div>
+      <div class="section-tight reveal">
+        <p class="label">02 · The script</p>
+        <div id="scriptsTabs" class="chips" style="margin-bottom:16px"></div>
+        <div id="scriptText"></div>
+        <div id="scriptDoc" hidden>
+          <div class="card doc-card">
+            <iframe id="scriptFrame" title="Cold call script" loading="lazy"></iframe>
+          </div>
+          <a id="scriptOpen" class="btn" target="_blank" rel="noopener">Open in Google Docs</a>
+        </div>
+        <p class="small t4" style="margin-top:14px">Owner pushing back? <a href="#" data-tab-link="objections">Practice the answers in Call Training →</a></p>
+      </div>
+    </section>
+
+    <!-- ================= OBJECTIONS ================= -->
+    <section id="tab-objections" class="tab-panel" aria-label="Objections" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Call Training</p>
+        <h1 class="hero-title hero-in">Have the answer <span class="gold">ready.</span></h1>
+        <p class="hero-sub hero-in">What owners actually say, and how Gage answers. Read the list, then drill it until you don't have to think.</p>
+      </div>
+      <div class="obj-top">
+        <div class="seg" role="group" aria-label="Mode">
+          <button class="seg-btn active" data-obj-mode="list">Study</button>
+          <button class="seg-btn" data-obj-mode="cards">Flashcards</button>
+          <button class="seg-btn" data-obj-mode="quiz">Quiz</button>
+        </div>
+        <span id="objMastery" class="small t4"></span>
+      </div>
+      <div id="objBody"></div>
+    </section>
+
+    <!-- ================= SUPPLIERS ================= -->
+    <section id="tab-suppliers" class="tab-panel" aria-label="Suppliers" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Suppliers &amp; Ordering</p>
+        <h1 class="hero-title hero-in">Stock your <span class="gold">route.</span></h1>
+        <p class="hero-sub hero-in">Where the team gets machines, Pokémon cards and squishies. Each list is a spreadsheet you can open or download.</p>
+      </div>
+      <div id="supplierTabs" class="chips" style="margin-bottom:16px"></div>
+      <div id="supplierBody"></div>
+    </section>
+
+    <!-- ================= CALL ANALYZER ================= -->
+    <section id="tab-analyzer" class="tab-panel" aria-label="Call Analyzer" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Call Reviewer</p>
+        <h1 class="hero-title hero-in">Get your calls graded <span class="gold">in Claude.</span></h1>
+        <p class="hero-sub hero-in">The call analyzer and Gage AI live in Claude now. Connect our tools once, then paste or upload any call and get graded on Gage's method.</p>
+      </div>
+      <div id="analyzerBody"></div>
+    </section>
+
+    <!-- ================= GOT A YES ================= -->
+    <section id="tab-yes" class="tab-panel" aria-label="Got a Yes" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Agreements</p>
+        <h1 class="hero-title hero-in">Lock it in <span class="gold">today.</span></h1>
+        <p class="hero-sub hero-in">A yes on the phone isn't a placement yet. Confirm the details, send the agreement the same day, and book the install.</p>
+      </div>
+      <div id="yesBody"></div>
+    </section>
+
+    <!-- ================= ORDER A MACHINE ================= -->
+    <section id="tab-order" class="tab-panel" aria-label="Order a Machine" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Buy a Machine</p>
+        <h1 class="hero-title hero-in">Order it the <span class="gold">right way.</span></h1>
+        <p class="hero-sub hero-in">Order from our supplier step by step and use the program discount code at checkout.</p>
+      </div>
+      <div id="orderBody"></div>
+    </section>
+
+    <!-- ================= SETUP AND INSTALL ================= -->
+    <section id="tab-setup" class="tab-panel" aria-label="Setup and Install" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Set Up Machine</p>
+        <h1 class="hero-title hero-in">From the box to <span class="gold">the store.</span></h1>
+        <p class="hero-sub hero-in">How to unpack the machine, set it up, pack it for the drive and install it on location. Tick off the checklist as you go.</p>
+      </div>
+      <div id="setupBody"></div>
+    </section>
+
+    <!-- ================= RESTOCK & CARE ================= -->
+    <section id="tab-care" class="tab-panel" aria-label="Restock and Care" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Restock &amp; Care</p>
+        <h1 class="hero-title hero-in">Keep it full. Keep it <span class="gold">selling.</span></h1>
+        <p class="hero-sub hero-in">A machine only makes money when it's stocked, clean and working. Do this checklist every visit, and use the calculator to know how much to order.</p>
+      </div>
+      <div id="careBody"></div>
+    </section>
+
+    <!-- ================= TRENDS ================= -->
+    <section id="tab-trends" class="tab-panel" aria-label="Trends" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">What's Selling</p>
+        <h1 class="hero-title hero-in">What's selling <span class="gold">right now.</span></h1>
+        <p class="hero-sub hero-in">Every week the team posts what's moving: sets, products and prices. Read it before you restock.</p>
+      </div>
+      <div id="trendAdmin"></div>
+      <div id="trendList"></div>
+    </section>
+
+    <!-- ================= PROFILE ================= -->
+    <section id="tab-profile" class="tab-panel" aria-label="Profile" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Profile</p>
+        <h1 class="hero-title hero-in">Your <span class="gold">profile.</span></h1>
+        <p class="hero-sub hero-in">Only you can see this. It's tied to your access code.</p>
+      </div>
+      <form id="profileForm" class="card profile-form reveal"></form>
+    </section>
+
+    <!-- ================= LOCATION FINDER ================= -->
+    <section id="tab-finder" class="tab-panel" aria-label="Locations" hidden>
+      <div class="hero glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Find Spots</p>
+        <h1 class="hero-title hero-in">Find every <span class="gold">wall</span> near you.</h1>
+        <p class="hero-sub hero-in">Every spot Gage recommends around you, ranked by location type and distance. Tap Google Maps on any place to check its reviews before you call.</p>
+      </div>
+
+      <div class="card finder-form reveal">
+        <div class="field">
+          <span class="label">Where are you?</span>
+          <div class="loc-row">
+            <button id="useMyLoc" class="btn btn-primary">Use my location</button>
+            <span class="or">or</span>
+            <form id="addrForm" class="addr-form">
+              <input id="addrInput" placeholder="City, address or ZIP" aria-label="City, address or ZIP">
+              <button class="btn" type="submit">Set</button>
+            </form>
+          </div>
+          <p id="originLabel" class="origin small t3"></p>
+        </div>
+
+        <div class="field">
+          <span class="label">Radius</span>
+          <div id="radiusChips" class="chips">
+            <button class="chip" data-r="25">25 mi</button>
+            <button class="chip" data-r="50">50 mi</button>
+            <button class="chip" data-r="100">100 mi</button>
+            <button class="chip active" data-r="150">150 mi</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label">Location types</span>
+          <div id="catChips" class="chips"></div>
+        </div>
+
+        <div class="finder-go">
+          <button id="findGo" class="btn btn-primary btn-lg" disabled>Find locations</button>
+          <span id="estimate" class="small t4"></span>
+        </div>
+      </div>
+
+      <div id="finderProgress" class="card progress-card" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="grow">
+          <p id="fProgTitle" class="prog-title">Loading places…</p>
+          <p id="fProgSub" class="small t3"></p>
+          <div class="bar"><div id="fProgBar" class="bar-fill"></div></div>
+        </div>
+        <button id="findStop" class="btn btn-sm">Stop</button>
+      </div>
+
+      <p id="finderErr" class="err" role="alert"></p>
+
+      <div id="finderResults" hidden>
+        <div class="stats" id="finderStats"></div>
+        <div id="map" class="map" aria-label="Map of results"></div>
+
+        <div class="results-bar">
+          <div id="resultCats" class="chips"></div>
+          <div class="results-tools">
+            <input id="resFilter" placeholder="Filter by name or city" aria-label="Filter results">
+            <select id="resSort" aria-label="Sort">
+              <option value="score">Best match</option>
+              <option value="dist">Closest</option>
+              <option value="phone">Has phone first</option>
+            </select>
+            <button id="csvBtn" class="btn btn-sm">Export CSV</button>
+          </div>
+        </div>
+        <p id="resCount" class="label"></p>
+        <div id="selBar" class="sel-bar"></div>
+        <div id="resList" class="res-list"></div>
+        <div class="row-center"><button id="moreBtn" class="btn" hidden>Show more</button></div>
+
+        <details class="legend card">
+          <summary>How results are ranked</summary>
+          <p class="small t3">Match = location type (what Gage's own machines do in that type of spot) and distance. The $ ranges are Gage's own route numbers in monthly sales, not a promise for any spot. Hot food and BBQ are guessed from the name, so check on Google Maps. More Google reviews usually means more people walking through.</p>
+          <div id="legendList" class="table"></div>
+          <p class="small t3">Phone numbers are the business line. Gage's rule: don't pitch the front desk. Use "Find owner" plus the skip-trace tool to get the owner's cell.</p>
+        </details>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">Pack Placement Student Hub · Students only · Places data © Overture Maps &amp; OpenStreetMap</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js?v=21"></script>
+</body>
+</html>
