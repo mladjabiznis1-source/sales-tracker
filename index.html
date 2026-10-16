@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="styles.css?v=17">
+<link rel="stylesheet" href="styles.css?v=18">
 <link rel="icon" href="icon.png">
 </head>
 <body>
@@ -57,15 +57,16 @@
     <div class="side-brand"><img class="brand-logo" src="logo.png" alt="Pack Placement"><span class="side-sub">Student Hub</span></div>
     <nav class="side-nav">
       <button class="nav-item nav-start" data-tab="dashboard"><span class="nav-ico" aria-hidden="true">★</span>Start Here</button>
+      <button class="nav-item" data-tab="gage"><span class="nav-ico" aria-hidden="true">?</span>Gage Q&amp;A</button>
       <span class="label nav-label">Get your first machine</span>
       <button class="nav-item" data-tab="finder"><span class="nav-ico" aria-hidden="true">⌕</span>Find Spots</button>
-      <button class="nav-item" data-tab="dwell"><span class="nav-ico" aria-hidden="true">✓</span>Check a Spot</button>
+      <button class="nav-item" data-tab="dwell"><span class="nav-ico" aria-hidden="true">✓</span>Dwell Check Location</button>
       <button class="nav-item" data-tab="leads"><span class="nav-ico" aria-hidden="true">☰</span>My Leads</button>
       <button class="nav-item" data-tab="skiptrace"><span class="nav-ico" aria-hidden="true">◎</span>Find the Owner</button>
-      <button class="nav-item" data-tab="calling"><span class="nav-ico" aria-hidden="true">☎</span>Call Scripts</button>
-      <button class="nav-item" data-tab="objections"><span class="nav-ico" aria-hidden="true">↻</span>Practice Pushback</button>
-      <button class="nav-item" data-tab="analyzer"><span class="nav-ico" aria-hidden="true">✎</span>Grade My Calls</button>
-      <button class="nav-item" data-tab="yes"><span class="nav-ico" aria-hidden="true">✦</span>They Said Yes</button>
+      <button class="nav-item" data-tab="calling"><span class="nav-ico" aria-hidden="true">☎</span>Cold Calling &amp; Scripts</button>
+      <button class="nav-item" data-tab="objections"><span class="nav-ico" aria-hidden="true">↻</span>Call Training</button>
+      <button class="nav-item" data-tab="analyzer"><span class="nav-ico" aria-hidden="true">✎</span>Call Reviewer</button>
+      <button class="nav-item" data-tab="yes"><span class="nav-ico" aria-hidden="true">✦</span>Agreements</button>
       <span class="label nav-label">Run your machine</span>
       <button class="nav-item" data-tab="order"><span class="nav-ico" aria-hidden="true">◇</span>Buy a Machine</button>
       <button class="nav-item" data-tab="suppliers"><span class="nav-ico" aria-hidden="true">▦</span>Suppliers &amp; Ordering</button>
@@ -96,6 +97,10 @@
         <div id="startVideo" class="video-grid one"></div>
       </div>
       <div class="section-tight">
+        <p class="label">How to use this toolkit</p>
+        <div class="howto" id="howto"></div>
+      </div>
+      <div class="section-tight">
         <div class="road-head"><p class="label">Your road to machine #1</p><span id="roadCount" class="small t3"></span></div>
         <div class="bar road-bar"><div id="roadBar" class="bar-fill"></div></div>
         <ol id="road" class="road"></ol>
@@ -114,11 +119,22 @@
       </div>
     </section>
 
+    <!-- ================= GAGE Q&A ================= -->
+    <section id="tab-gage" class="tab-panel" aria-label="Gage Q and A" hidden>
+      <div class="hero hero-compact glow-zone">
+        <div class="glow" aria-hidden="true"></div>
+        <p class="eyebrow hero-in">Gage Q&amp;A</p>
+        <h1 class="hero-title hero-in">Stuck? <span class="gold">Ask Gage.</span></h1>
+        <p class="hero-sub hero-in">You have a group chat with Gage. Ask him anything, any time. Here's how to find it, and how to ask so you get a fast, useful answer.</p>
+      </div>
+      <div id="gageBody"></div>
+    </section>
+
     <!-- ================= DWELL CHECK ================= -->
     <section id="tab-dwell" class="tab-panel" aria-label="Dwell Check" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Check a Spot</p>
+        <p class="eyebrow hero-in">Dwell Check Location</p>
         <h1 class="hero-title hero-in">Is this a <span class="gold">good spot?</span></h1>
         <p class="hero-sub hero-in">Answer a few quick questions about the business. You get green, yellow or red, based on what has worked, and what has failed, on Gage's own machines.</p>
       </div>
@@ -162,7 +178,7 @@
     <section id="tab-calling" class="tab-panel" aria-label="Cold Calling" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Call Scripts</p>
+        <p class="eyebrow hero-in">Cold Calling &amp; Scripts</p>
         <h1 class="hero-title hero-in">Get the <span class="gold">owner</span> on the phone.</h1>
         <p class="hero-sub hero-in">Watch how a call is done and what a real one sounds like. Then keep the script open while you dial.</p>
       </div>
@@ -185,7 +201,7 @@
     <section id="tab-objections" class="tab-panel" aria-label="Objections" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Practice Pushback</p>
+        <p class="eyebrow hero-in">Call Training</p>
         <h1 class="hero-title hero-in">Have the answer <span class="gold">ready.</span></h1>
         <p class="hero-sub hero-in">What owners actually say, and how Gage answers. Read the list, then drill it until you don't have to think.</p>
       </div>
@@ -216,7 +232,7 @@
     <section id="tab-analyzer" class="tab-panel" aria-label="Call Analyzer" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Grade My Calls</p>
+        <p class="eyebrow hero-in">Call Reviewer</p>
         <h1 class="hero-title hero-in">Get your calls graded <span class="gold">in Claude.</span></h1>
         <p class="hero-sub hero-in">The call analyzer and Gage AI live in Claude now. Connect our tools once, then paste or upload any call and get graded on Gage's method.</p>
       </div>
@@ -227,7 +243,7 @@
     <section id="tab-yes" class="tab-panel" aria-label="Got a Yes" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">They Said Yes</p>
+        <p class="eyebrow hero-in">Agreements</p>
         <h1 class="hero-title hero-in">Lock it in <span class="gold">today.</span></h1>
         <p class="hero-sub hero-in">A yes on the phone isn't a placement yet. Confirm the details, send the agreement the same day, and book the install.</p>
       </div>
@@ -382,7 +398,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="adapter.js?v=17"></script>
-<script src="app.js?v=17"></script>
+<script src="adapter.js?v=18"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
