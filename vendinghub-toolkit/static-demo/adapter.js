@@ -13,7 +13,7 @@
   const posts = [{ id: "t1", at: "2026-10-13T15:00:00Z", title: "Example: what a weekly trend post looks like", body: "The team writes here every week: which sets are moving, what to restock, and what prices are doing.", tags: ["Example", "Pokémon"] }];
 
   // ---- live places from OpenStreetMap
-  const MIRRORS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter", "https://overpass.private.coffee/api/interpreter"];
+  const MIRRORS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
   const MAX_MI = 40; // Overpass gets slow past this; the page says so
   const radiusMi = () => Math.min(MAX_MI, Number(document.querySelector("#radiusChips .chip.active")?.dataset.r) || 25);
   let lastPlace = null; // a business pasted into Dwell Check
@@ -33,22 +33,39 @@
   // search failed. Build the same thing from AbortController, which every browser has.
   const timeoutSignal = (ms) => { try { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; } catch { return undefined; } };
   const cache = new Map();
+  // One Overpass search at a time: the free servers allow only a couple per internet connection,
+  // so parallel searches (or a second device on the same Wi-Fi) got "429 Too Many Requests".
+  let chain = Promise.resolve();
+  const queued = (fn) => { const run = chain.then(fn, fn); chain = run.catch(() => {}); return run; };
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  const why = (e) => e?.name === "AbortError" ? "the map server took too long"
+    : /HTTP 429/.test(e?.message) ? "too many searches from this internet connection"
+    : /HTTP/.test(e?.message) ? `the map server answered ${e.message}`
+    : "the map server couldn't be reached (an ad blocker, VPN or work network can block it)";
   async function overpass(kind, c) {
     const r = kind === "rest" ? Math.min(c.r, 12) : c.r;
     const key = `${kind}:${c.lat.toFixed(3)},${c.lng.toFixed(3)}:${r}`;
     if (!cache.has(key)) cache.set(key, (async () => {
       const around = `(around:${Math.round(r * 1609)},${c.lat},${c.lng})`;
-      const q = `[out:json][timeout:40];(${QUERIES[kind](around)});out center tags 4000;`;
-      let lastErr;
-      for (const m of MIRRORS) {
-        try {
-          const res = await fetch(m, { method: "POST", body: new URLSearchParams({ data: q }), signal: timeoutSignal(12000) }); // slow mirror: try the next
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return toRows(kind, (await res.json()).elements || []);
-        } catch (e) { lastErr = e; }
-      }
-      cache.delete(key);
-      throw lastErr;
+      const q = `[out:json][timeout:60];(${QUERIES[kind](around)});out center tags 4000;`;
+      // A big area can take the server 20-40 s; a Dwell Check circle takes a second or two.
+      const limit = r <= 3 ? 15000 : 65000;
+      return queued(async () => {
+        let lastErr;
+        // Busy, slow or blocked server: go straight to the next one. All busy: wait once, go round again.
+        for (let pass = 0; pass < 2; pass++) {
+          if (pass) { if (!/HTTP (429|504)/.test(lastErr?.message)) break; await wait(4000); }
+          for (const m of MIRRORS) {
+            try {
+              const res = await fetch(m, { method: "POST", body: new URLSearchParams({ data: q }), signal: timeoutSignal(limit) });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              return toRows(kind, (await res.json()).elements || []);
+            } catch (e) { lastErr = e; }
+          }
+        }
+        cache.delete(key);
+        throw new Error(why(lastErr));
+      });
     })());
     return cache.get(key);
   }
@@ -149,11 +166,11 @@
       const [lat, lng, r] = nearQ;
       if (Math.floor(lat) !== Number(m[2]) || Math.floor(lng) !== Number(m[3])) return json([]);
       try { return json(await overpass(m[1], { lat, lng, r })); }
-      catch { return json({ error: "OpenStreetMap is busy." }, 503); }
+      catch (e) { return json({ error: e.message }, 503); }
     }
     if (m) {
       try { return json(await tile(m[1], Number(m[2]), Number(m[3]))); }
-      catch { return json({ error: "OpenStreetMap is busy. Try again in a minute." }, 503); }
+      catch (e) { return json({ error: e.message }, 503); }
     }
     if (path.startsWith("/income/")) return json({});
     return real(input, opts);
