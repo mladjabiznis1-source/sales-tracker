@@ -645,6 +645,8 @@ details.transcript pre { white-space: pre-wrap; font-family: 'Inter', sans-serif
 .howto-item p { margin: 4px 0 0; }
 .howto-cta { grid-column: 1 / -1; }
 @media (max-width: 640px) { .help-ask { margin-left: 20px; } }
+.page-video { margin: 0 0 20px; }
+.page-video .video-grid.one { max-width: 720px; }
 
 /* public demo banner */
 .demo-bar { position: sticky; top: 0; z-index: 2000; background: var(--accent); color: #000; font-size: 12.5px; font-weight: 500; text-align: center; padding: 7px 16px; }
