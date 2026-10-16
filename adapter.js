@@ -29,6 +29,9 @@
     rest: (a) => `nwr["amenity"="restaurant"]${a};`,
     cards: (a) => `nwr["shop"~"^(games|collector|hobby|comic|anime)$"]${a};`,
   };
+  // AbortSignal.timeout() doesn't exist in older Safari (macOS before Ventura): it throws and every
+  // search failed. Build the same thing from AbortController, which every browser has.
+  const timeoutSignal = (ms) => { try { const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; } catch { return undefined; } };
   const cache = new Map();
   async function overpass(kind, c) {
     const r = kind === "rest" ? Math.min(c.r, 12) : c.r;
@@ -39,7 +42,7 @@
       let lastErr;
       for (const m of MIRRORS) {
         try {
-          const res = await fetch(m, { method: "POST", body: new URLSearchParams({ data: q }), signal: AbortSignal.timeout(12000) }); // slow mirror: try the next
+          const res = await fetch(m, { method: "POST", body: new URLSearchParams({ data: q }), signal: timeoutSignal(12000) }); // slow mirror: try the next
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           return toRows(kind, (await res.json()).elements || []);
         } catch (e) { lastErr = e; }
@@ -125,8 +128,8 @@
         const near = centers()[0];
         const box = near ? `&viewbox=${near.lng - 0.6},${near.lat + 0.45},${near.lng + 0.6},${near.lat - 0.45}` : "";
         let hits = [];
-        try { hits = await (await real(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us${box}&q=${encodeURIComponent(text)}`, { signal: AbortSignal.timeout(10000) })).json(); } catch {}
-        if (!hits.length && box) try { hits = await (await real(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&q=${encodeURIComponent(text)}`, { signal: AbortSignal.timeout(10000) })).json(); } catch {}
+        try { hits = await (await real(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us${box}&q=${encodeURIComponent(text)}`, { signal: timeoutSignal(10000) })).json(); } catch {}
+        if (!hits.length && box) try { hits = await (await real(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&q=${encodeURIComponent(text)}`, { signal: timeoutSignal(10000) })).json(); } catch {}
         if (!hits.length) return json({ error: "Couldn't find that business. Add the city (e.g. Speedy Mart, Oakland CA), or answer the questions below." }, 400);
         const h = hits[0], lat = Number(h.lat), lng = Number(h.lon);
         lastPlace = { lat, lng, label: "" };

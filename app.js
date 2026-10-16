@@ -1009,12 +1009,12 @@ Location owner: ______________  Date: ________`;
       // For sit-down food spots the gas-station quote doesn't fit; say it plainly instead.
       if (q.k === "hot" && o[0] === "yes" && (type === "restaurant" || type === "kbbq")) reasons.push("✓ Sit-down food means people wait for it, and waiting is when they notice the machine.");
       else if (o[3]) reasons.push(o[3]);
-      if (o[4]) hardRed ||= o[4];
+      if (o[4] && !hardRed) hardRed = o[4];
     }
     if ((type === "gas" || type === "liquor") && answers.hot === "no") {
       reasons.push("✕ No hot food. Gage's beach liquor store with no hot food does \"$1,000 to $1,500, $1,700 a month\"; \"the one with hot food just does more.\"");
     }
-    const score = Math.max(0, Math.min(100, Math.round((pts / DWELL_MAX) * 100)));
+    const score = Math.max(0, Math.min(100, Math.round((pts / DWELL_MAX) * 100))) + 0; // + 0 turns -0 into 0
     const verdict = hardRed ? "red" : score >= 65 ? "green" : score >= 42 ? "yellow" : "red";
     return { score, verdict, reasons, ref: t.ref, typeLabel: t.label, hardRed };
   }
