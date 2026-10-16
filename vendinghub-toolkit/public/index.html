@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="styles.css?v=16">
+<link rel="stylesheet" href="styles.css?v=17">
 <link rel="icon" href="icon.png">
 </head>
 <body>
@@ -57,14 +57,14 @@
     <nav class="side-nav">
       <button class="nav-item nav-start" data-tab="dashboard"><span class="nav-ico" aria-hidden="true">★</span>Start Here</button>
       <span class="label nav-label">Get your first machine</span>
-      <button class="nav-item" data-tab="finder"><span class="nav-num" aria-hidden="true">1</span>Find Spots</button>
-      <button class="nav-item" data-tab="dwell"><span class="nav-num" aria-hidden="true">2</span>Check a Spot</button>
-      <button class="nav-item" data-tab="leads"><span class="nav-num" aria-hidden="true">3</span>My Leads</button>
-      <button class="nav-item" data-tab="skiptrace"><span class="nav-num" aria-hidden="true">4</span>Find the Owner</button>
-      <button class="nav-item" data-tab="calling"><span class="nav-num" aria-hidden="true">5</span>Call Scripts</button>
-      <button class="nav-item" data-tab="objections"><span class="nav-num" aria-hidden="true">6</span>Practice Pushback</button>
-      <button class="nav-item" data-tab="analyzer"><span class="nav-num" aria-hidden="true">7</span>Grade My Calls</button>
-      <button class="nav-item" data-tab="yes"><span class="nav-num" aria-hidden="true">8</span>They Said Yes</button>
+      <button class="nav-item" data-tab="finder"><span class="nav-ico" aria-hidden="true">⌕</span>Find Spots</button>
+      <button class="nav-item" data-tab="dwell"><span class="nav-ico" aria-hidden="true">✓</span>Check a Spot</button>
+      <button class="nav-item" data-tab="leads"><span class="nav-ico" aria-hidden="true">☰</span>My Leads</button>
+      <button class="nav-item" data-tab="skiptrace"><span class="nav-ico" aria-hidden="true">◎</span>Find the Owner</button>
+      <button class="nav-item" data-tab="calling"><span class="nav-ico" aria-hidden="true">☎</span>Call Scripts</button>
+      <button class="nav-item" data-tab="objections"><span class="nav-ico" aria-hidden="true">↻</span>Practice Pushback</button>
+      <button class="nav-item" data-tab="analyzer"><span class="nav-ico" aria-hidden="true">✎</span>Grade My Calls</button>
+      <button class="nav-item" data-tab="yes"><span class="nav-ico" aria-hidden="true">✦</span>They Said Yes</button>
       <span class="label nav-label">Run your machine</span>
       <button class="nav-item" data-tab="order"><span class="nav-ico" aria-hidden="true">◇</span>Buy a Machine</button>
       <button class="nav-item" data-tab="suppliers"><span class="nav-ico" aria-hidden="true">▦</span>Suppliers &amp; Ordering</button>
@@ -104,6 +104,10 @@
         <div id="phase2" class="tool-grid"></div>
       </div>
       <div class="section-tight">
+        <p class="label">Words you'll hear</p>
+        <div class="gloss" id="gloss"></div>
+      </div>
+      <div class="section-tight">
         <p class="label">Your numbers</p>
         <div class="stats" id="dashStats"></div>
       </div>
@@ -113,9 +117,9 @@
     <section id="tab-dwell" class="tab-panel" aria-label="Dwell Check" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Dwell Check</p>
-        <h1 class="hero-title hero-in">Is this a <span class="gold">good wall?</span></h1>
-        <p class="hero-sub hero-in">Answer a few questions about the spot. You get a straight verdict based on what's worked, and failed, on Gage's own route.</p>
+        <p class="eyebrow hero-in">Check a Spot</p>
+        <h1 class="hero-title hero-in">Is this a <span class="gold">good spot?</span></h1>
+        <p class="hero-sub hero-in">Answer a few quick questions about the business. You get green, yellow or red, based on what has worked, and what has failed, on Gage's own machines.</p>
       </div>
       <form id="dwellForm" class="card dwell-form reveal"></form>
       <div id="dwellResult" hidden></div>
@@ -146,7 +150,7 @@
     <section id="tab-skiptrace" class="tab-panel" aria-label="Skip and Trace Team" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Skip &amp; Trace Team</p>
+        <p class="eyebrow hero-in">Find the Owner</p>
         <h1 class="hero-title hero-in">We find the <span class="gold">owner.</span></h1>
         <p class="hero-sub hero-in">Send us the locations you want to call. Our team finds the owner's name and cell number so you skip the front desk and talk to the person who can say yes.</p>
       </div>
@@ -157,7 +161,7 @@
     <section id="tab-calling" class="tab-panel" aria-label="Cold Calling" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Cold Calling</p>
+        <p class="eyebrow hero-in">Call Scripts</p>
         <h1 class="hero-title hero-in">Get the <span class="gold">owner</span> on the phone.</h1>
         <p class="hero-sub hero-in">Watch how a call is done and what a real one sounds like. Then keep the script open while you dial.</p>
       </div>
@@ -180,7 +184,7 @@
     <section id="tab-objections" class="tab-panel" aria-label="Objections" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Objections</p>
+        <p class="eyebrow hero-in">Practice Pushback</p>
         <h1 class="hero-title hero-in">Have the answer <span class="gold">ready.</span></h1>
         <p class="hero-sub hero-in">What owners actually say, and how Gage answers. Read the list, then drill it until you don't have to think.</p>
       </div>
@@ -199,7 +203,7 @@
     <section id="tab-suppliers" class="tab-panel" aria-label="Suppliers" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Suppliers</p>
+        <p class="eyebrow hero-in">Suppliers &amp; Ordering</p>
         <h1 class="hero-title hero-in">Stock your <span class="gold">route.</span></h1>
         <p class="hero-sub hero-in">Where the team gets machines, Pokémon cards and squishies. Each list is a spreadsheet you can open or download.</p>
       </div>
@@ -211,7 +215,7 @@
     <section id="tab-analyzer" class="tab-panel" aria-label="Call Analyzer" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Call Analyzer</p>
+        <p class="eyebrow hero-in">Grade My Calls</p>
         <h1 class="hero-title hero-in">Get your calls graded <span class="gold">in Claude.</span></h1>
         <p class="hero-sub hero-in">The call analyzer and Gage AI live in Claude now. Connect our tools once, then paste or upload any call and get graded on Gage's method.</p>
       </div>
@@ -222,7 +226,7 @@
     <section id="tab-yes" class="tab-panel" aria-label="Got a Yes" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Got a yes</p>
+        <p class="eyebrow hero-in">They Said Yes</p>
         <h1 class="hero-title hero-in">Lock it in <span class="gold">today.</span></h1>
         <p class="hero-sub hero-in">A yes on the phone isn't a placement yet. Confirm the details, send the agreement the same day, and book the install.</p>
       </div>
@@ -233,7 +237,7 @@
     <section id="tab-order" class="tab-panel" aria-label="Order a Machine" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Order a machine</p>
+        <p class="eyebrow hero-in">Buy a Machine</p>
         <h1 class="hero-title hero-in">Order it the <span class="gold">right way.</span></h1>
         <p class="hero-sub hero-in">Order from our supplier step by step and use the program discount code at checkout.</p>
       </div>
@@ -244,8 +248,8 @@
     <section id="tab-setup" class="tab-panel" aria-label="Setup and Install" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Setup &amp; install</p>
-        <h1 class="hero-title hero-in">From the box to <span class="gold">the wall.</span></h1>
+        <p class="eyebrow hero-in">Set Up Machine</p>
+        <h1 class="hero-title hero-in">From the box to <span class="gold">the store.</span></h1>
         <p class="hero-sub hero-in">How to unpack the machine, set it up, pack it for the drive and install it on location. Tick off the checklist as you go.</p>
       </div>
       <div id="setupBody"></div>
@@ -255,7 +259,7 @@
     <section id="tab-care" class="tab-panel" aria-label="Restock and Care" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Restock &amp; care</p>
+        <p class="eyebrow hero-in">Restock &amp; Care</p>
         <h1 class="hero-title hero-in">Keep it full. Keep it <span class="gold">selling.</span></h1>
         <p class="hero-sub hero-in">A machine only makes money when it's stocked, clean and working. Do this checklist every visit, and use the calculator to know how much to order.</p>
       </div>
@@ -266,7 +270,7 @@
     <section id="tab-trends" class="tab-panel" aria-label="Trends" hidden>
       <div class="hero hero-compact glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Trends</p>
+        <p class="eyebrow hero-in">What's Selling</p>
         <h1 class="hero-title hero-in">What's selling <span class="gold">right now.</span></h1>
         <p class="hero-sub hero-in">Every week the team posts what's moving: sets, products and prices. Read it before you restock.</p>
       </div>
@@ -289,7 +293,7 @@
     <section id="tab-finder" class="tab-panel" aria-label="Locations" hidden>
       <div class="hero glow-zone">
         <div class="glow" aria-hidden="true"></div>
-        <p class="eyebrow hero-in">Location finder</p>
+        <p class="eyebrow hero-in">Find Spots</p>
         <h1 class="hero-title hero-in">Find every <span class="gold">wall</span> near you.</h1>
         <p class="hero-sub hero-in">Every spot Gage recommends around you, ranked by location type and distance. Tap Google Maps on any place to check its reviews before you call.</p>
       </div>
@@ -377,6 +381,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
