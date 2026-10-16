@@ -73,6 +73,9 @@
   // Order a Machine: our supplier, the program discount code and the ordering steps (one string each).
   const ORDERING = { supplier: "", url: "", code: "", loom: "", steps: [] };
   // Skip & Trace team: how students reach them. Fill in what you have; empty fields are hidden.
+  // Gage Q&A page. loom: how to use Gage and ask good questions. phone: Gage's number.
+  // chatApp: where the group chat lives (e.g. "iMessage", "WhatsApp"). chatName: what the group is called.
+  const GAGE_QA = { loom: "", phone: "", chatApp: "", chatName: "" };
   const SKIP_TRACE = { loom: "", email: "", phone: "", text: "", hours: "", turnaround: "" };
   // Start Here: the welcome video every new student watches first (Loom share link).
   const ONBOARDING = { welcomeLoom: "" };
@@ -258,12 +261,12 @@
 
   // ------------------------------------------------------------------ sidebar navigation
   const TOOL_NAMES = {
-    dashboard: "Start Here", finder: "Find Spots", dwell: "Check a Spot", calling: "Call Scripts", objections: "Practice Pushback",
-    analyzer: "Grade My Calls", yes: "They Said Yes", order: "Buy a Machine", suppliers: "Suppliers & Ordering", setup: "Set Up Machine",
+    dashboard: "Start Here", gage: "Gage Q&A", finder: "Find Spots", dwell: "Dwell Check Location", calling: "Cold Calling & Scripts", objections: "Call Training",
+    analyzer: "Call Reviewer", yes: "Agreements", order: "Buy a Machine", suppliers: "Suppliers & Ordering", setup: "Set Up Machine",
     trends: "What's Selling", leads: "My Leads", skiptrace: "Find the Owner", care: "Restock & Care", profile: "Profile",
   };
   // Pages that were renamed or removed, so a remembered tab still lands somewhere sensible.
-  const OLD_TABS = { scripts: "calling", coach: "analyzer", gage: "analyzer" };
+  const OLD_TABS = { scripts: "calling", coach: "analyzer" };
   const sidebar = $("#sidebar");
 
   function selectTab(name) {
@@ -277,6 +280,7 @@
     // Replay the hero entrance for the page that just opened.
     $$(`#tab-${name} .hero-in`).forEach((el) => { el.style.animation = "none"; void el.offsetWidth; el.style.animation = ""; });
     if (name === "dashboard") renderDashboard();
+    if (name === "gage") renderGage();
     if (name === "calling") renderCalling();
     if (name === "objections") openObjections();
     if (name === "suppliers") renderSuppliers();
@@ -1639,11 +1643,11 @@
   const ROAD = [
     { k: "video", tab: "dashboard", title: "Watch the welcome video", how: "It's right below. 5 minutes, and you'll know how to use this whole site.", manual: true },
     { k: "spots", tab: "finder", title: "Save 10 spots near you", how: "Open Find Spots, type your city, tick the places you like, press Save.", goal: 10, count: () => leads.list.length },
-    { k: "check", tab: "dwell", title: "Check your 3 best spots", how: "Open Check a Spot and answer the questions. Green means call them first.", goal: 3, count: () => dwell.list.length },
+    { k: "check", tab: "dwell", title: "Check your 3 best spots", how: "Open Dwell Check Location and answer the questions. Green means call them first.", goal: 3, count: () => dwell.list.length },
     { k: "owner", tab: "skiptrace", title: "Get the owners' phone numbers", how: "Send your spots to our Find the Owner team. They send back the owner's name and cell.", goal: 1, count: () => leads.list.filter((l) => l.owner || l.ownerPhone).length },
-    { k: "learn", tab: "objections", title: "Learn the script and practice pushback", how: "Read the Call Scripts, then practice until you know half the answers by heart.", goal: 7, count: () => mastered.size },
+    { k: "learn", tab: "objections", title: "Learn the script and practice pushback", how: "Read the Cold Calling & Scripts, then practice until you know half the answers by heart.", goal: 7, count: () => mastered.size },
     { k: "calls", tab: "leads", title: "Make 10 calls", how: "Call from My Leads. After each call, change the status: no answer, follow up, said no or said yes.", goal: 10, count: () => leads.list.filter((l) => l.status !== "new").length },
-    { k: "yes", tab: "yes", title: "Get your first yes", how: "When an owner says yes, open They Said Yes and send the agreement the same day.", goal: 1, count: () => leads.list.filter((l) => l.status === "yes" || l.status === "placed").length },
+    { k: "yes", tab: "yes", title: "Get your first yes", how: "When an owner says yes, open Agreements and send the agreement the same day.", goal: 1, count: () => leads.list.filter((l) => l.status === "yes" || l.status === "placed").length },
     { k: "machine", tab: "order", title: "Buy and set up your machine", how: "Order with our discount code, then follow Set Up Machine step by step. Mark the lead as Machine placed.", goal: 1, count: () => Math.max(leads.list.filter((l) => l.status === "placed").length, Number(profile?.machines) || 0) },
   ];
   const roadTicks = new Set(store.get("ic_road", []));
@@ -1696,7 +1700,7 @@
     $("#dashStats").innerHTML = `
       <div class="stat"><span class="label">Machines placed</span><div class="stat-num gold-num pop"><span data-count="${machines}">0</span></div><p class="stat-cap">${esc(profile?.goal ? profile.goal.slice(0, 60) : "Set a goal in your profile")}</p></div>
       <div class="stat"><span class="label">Spots saved</span><div class="stat-num sm"><span data-count="${leads.list.length}">0</span></div><p class="stat-cap">${yeses} said yes</p></div>
-      <div class="stat"><span class="label">Pushback mastered</span><div class="stat-num sm okc"><span data-count="${mastered.size}">0</span><small class="t4" style="font-size:.5em">/${OBJECTIONS.length}</small></div><p class="stat-cap">Practice in Practice Pushback</p></div>`;
+      <div class="stat"><span class="label">Pushback mastered</span><div class="stat-num sm okc"><span data-count="${mastered.size}">0</span><small class="t4" style="font-size:.5em">/${OBJECTIONS.length}</small></div><p class="stat-cap">Practice in Call Training</p></div>`;
     countUps($("#dashStats"));
   }
 
@@ -1706,7 +1710,7 @@
     dwell: ["See if a spot is worth calling before you spend time on it.", ["Paste the business's Google Maps link, or answer the questions yourself.", "Press Check this spot.", "Green: call them. Yellow: visit first. Red: skip it."]],
     leads: ["Every spot you saved, in one list. This is where you track your calls.", ["Press the phone number or Google Maps to look a spot up.", "After each call, change the status (no answer, said no, said yes...).", "Press Notes & owner to write down the owner's name and when to call back."]],
     skiptrace: ["Our team finds the owner's name and cell number for you.", ["In My Leads, tick the spots and press Send to Skip & Trace.", "Email or text that file to the team (contact below).", "When they send it back, press Import results. The owners show up in My Leads."]],
-    calling: ["Learn what to say when the owner picks up.", ["Watch the two videos.", "Read the script. Keep it open while you call.", "Owner pushing back? Go to Practice Pushback."]],
+    calling: ["Learn what to say when the owner picks up.", ["Watch the two videos.", "Read the script. Keep it open while you call.", "Owner pushing back? Go to Call Training."]],
     objections: ["Practice what to say when an owner says no or \"send me info\".", ["Read the list once.", "Press Flashcards: say your answer out loud, then check it.", "Do the Quiz until you get most right."]],
     analyzer: ["Get your calls graded by our AI coach inside Claude.", ["Follow the 5 steps once to connect it.", "Copy one of the prompts.", "Paste your call and send. You get a score and what to say next time."]],
     yes: ["What to do the moment an owner says yes.", ["Before you hang up, confirm the 4 things in the list.", "Send the agreement the same day.", "Copy the emails and send them at the right time."]],
@@ -1714,6 +1718,7 @@
     suppliers: ["Where to get your machine, cards and squishies, and how much to order.", ["Pick a tab: Machines, Pokémon cards or Squishies.", "Use How much should I order? to get your number.", "Copy the message and send it to the supplier."]],
     setup: ["Get your machine from the box into the store.", ["Watch the 4 videos in order.", "Tick the checklist as you go.", "Send the owner a photo when it's installed."]],
     care: ["Keep your machine full, clean and working so it keeps making money.", ["Do the checklist every time you visit.", "Use the calculator to know how much to reorder.", "Something broken? Watch the fix-it video."]],
+    gage: ["Your direct line to Gage.", ["Find your group chat with Gage (steps below).", "Ask using the template so he can answer fast.", "Want a call graded? Try Call Reviewer first."]],
     trends: ["What's selling right now, from our team every week.", ["Read the newest post at the top.", "Use it when you restock.", "Check back every week."]],
   };
   // "What's next" button at the bottom of each page, so nobody has to guess where to go.
@@ -1743,12 +1748,46 @@
     ["Restock", "Refilling the machine with cards and products."],
     ["Gage", "The coach behind this program. Every rule on this site comes from his own machines."],
   ];
+  function renderGage() {
+    const plain = (label, inner) => `<div class="section-tight"><p class="label">${label}</p>${inner}</div>`;
+    const g = GAGE_QA, app = g.chatApp ? ` in ${esc(g.chatApp)}` : "", nm = g.chatName ? ` called <b>${esc(g.chatName)}</b>` : "";
+    $("#gageBody").innerHTML =
+      plain("Watch first", `<div class="video-grid one">${videoCard({ title: "How to use Gage", sub: "What to ask, when to ask, and how to get a fast answer.", url: g.loom })}</div>`) +
+      plain("Gage's number", g.phone
+        ? `<div class="card contact-card">${copyBlock(g.phone, { label: "Text or call Gage" })}<a class="btn btn-primary" href="sms:${esc(g.phone.replace(/[^+\d]/g, ""))}">Text Gage</a></div>`
+        : emptyCard("Coming soon", "Gage's number", "Gage's number will be posted here.")) +
+      plain("Find your group chat", `<div class="card">${stepList([
+        ["You already have one", "When you joined, the team made a group chat with you and Gage."],
+        ["Open your messages" + app, `Look for the group with Gage in it${nm}. Search for "Gage" if you don't see it.`],
+        ["Can't find it?", g.phone ? `Text Gage at the number above and ask to be added.` : "Text Gage and ask to be added."],
+      ])}</div>`) +
+      plain("How to ask so you get a fast answer", `<div class="card">${stepList([
+        ["Say which step you're on", 'For example: "Cold Calling & Scripts" or "Dwell Check Location".'],
+        ["Give the details", "The business name and its Google Maps link, or the exact words the owner said."],
+        ["Say what you already tried", "So Gage doesn't repeat what you already know."],
+        ["Add a screenshot or the call recording", "One picture explains more than a long message."],
+      ])}</div>`) +
+      plain("Copy this and fill it in", copyBlock(`Hi Gage,\n\nI'm on: [step, e.g. Cold Calling]\nThe spot: [business name + Google Maps link]\nWhat happened: [what the owner said / what went wrong]\nWhat I tried: [what you did]\nMy question: [one clear question]`)) +
+      plain("Before you ask", `<div class="card">${stepList([
+        ["Read the \"How this page works\" box", "Every page has one at the top. Most answers are there."],
+        ["Want feedback on a call?", 'Use <a href="#" data-tab-link="analyzer">Call Reviewer</a> first. You get a score in a minute, then bring Gage the questions it can\'t answer.'],
+      ])}</div>`);
+  }
+  const HOWTO = [
+    ["1", "Go down the menu", "The left menu is in order. \"Get your first machine\" takes you to your first yes. \"Run your machine\" is for after."],
+    ["2", "Read the box at the top", "Every page starts with \"How this page works\": 3 short steps."],
+    ["3", "Press Next at the bottom", "Every page ends with a button to the next page, so you never have to guess."],
+    ["4", "Stuck? Ask Gage", "Open Gage Q&A. Your group chat with Gage is there."],
+  ];
   function addPageNext() {
     for (const [tab, [to, why]] of Object.entries(PAGE_NEXT)) {
       const panel = $(`#tab-${tab}`);
       if (!panel || $(".page-next", panel)) continue;
       panel.insertAdjacentHTML("beforeend", `<div class="card page-next"><div class="grow"><span class="label">When you're done here</span><p class="page-next-title">Next: ${esc(TOOL_NAMES[to])}</p><p class="small t3">${esc(why)}</p></div><button class="btn btn-primary" data-tab-link="${to}">Go →</button></div>`);
     }
+    const h = $("#howto");
+    if (h && !h.childElementCount) h.innerHTML = HOWTO.map(([n, t, d]) => `<div class="howto-item"><span class="road-n" aria-hidden="true">${n}</span><div><b>${esc(t)}</b><p class="small t3">${esc(d)}</p></div></div>`).join("") +
+      `<div class="howto-cta"><button class="btn" data-tab-link="gage">Open Gage Q&amp;A →</button></div>`;
     const g = $("#gloss");
     if (g && !g.childElementCount) g.innerHTML = GLOSSARY.map(([w, d]) => `<div class="gloss-item"><b>${esc(w)}</b><span class="small t3">${esc(d)}</span></div>`).join("");
   }
@@ -1761,6 +1800,7 @@
         <summary><span class="help-q" aria-hidden="true">?</span><b>How this page works</b><span class="small t3 grow">${esc(what)}</span></summary>
         <ol class="help-steps">${steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
         ${video ? `<a class="btn btn-sm" href="${esc(video)}" target="_blank" rel="noopener">▶ Watch how (1 min)</a>` : ""}
+        ${tab === "gage" ? "" : `<p class="help-ask small t3">Still stuck? <a href="#" data-tab-link="gage">Ask Gage →</a></p>`}
       </details>`);
     }
     // Open the first time; once closed it stays closed for that page.

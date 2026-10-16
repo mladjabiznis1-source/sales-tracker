@@ -638,3 +638,10 @@ details.transcript pre { white-space: pre-wrap; font-family: 'Inter', sans-serif
 .gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
 .gloss-item { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
 @media (max-width: 640px) { .page-next { flex-wrap: wrap; } .page-next .btn { width: 100%; } }
+.help-ask { margin: -4px 20px 16px 58px; }
+.help-ask a { color: var(--accent); }
+.howto { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+.howto-item { display: flex; gap: 12px; padding: 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--line); }
+.howto-item p { margin: 4px 0 0; }
+.howto-cta { grid-column: 1 / -1; }
+@media (max-width: 640px) { .help-ask { margin-left: 20px; } }
