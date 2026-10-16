@@ -597,14 +597,15 @@ Location owner: ______________  Date: ________`;
         $("#fProgSub").textContent = `${finder.places.length.toLocaleString()} places found`;
       };
       progress();
-      let i = 0;
+      let i = 0, failed = 0, failWhy = "";
       async function worker() {
         while (i < files.length && !finder.stop) {
           const f = files[i++];
           try {
             const r = await window.__vhFetch(f);
             if (r.ok) for (const row of await r.json()) { const p = makePlace(row); if (p) finder.places.push(p); }
-          } catch { /* one missing tile shouldn't sink the search */ }
+            else { failed++; failWhy = (await r.json().catch(() => ({}))).error || `error ${r.status}`; }
+          } catch (e) { failed++; failWhy = e.message; } // one missing tile shouldn't sink the search
           done++;
           progress();
           if (Date.now() - lastRender > 400) { lastRender = Date.now(); renderResults(); }
@@ -612,6 +613,10 @@ Location owner: ______________  Date: ________`;
       }
       await Promise.all(Array.from({ length: 4 }, worker));
       if (finder.stop) $("#finderErr").textContent = "Stopped. Showing what was found so far.";
+      // Say why instead of silently showing nothing.
+      else if (failed) $("#finderErr").textContent = finder.places.length
+        ? `Some areas didn't load (${failWhy}). Press Find locations again to fill them in.`
+        : `Couldn't load places: ${failWhy}. Wait a minute and press Find locations again.`;
     } catch (err) {
       $("#finderErr").textContent = err.message;
     }
