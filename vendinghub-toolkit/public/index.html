@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="styles.css?v=18">
+<link rel="stylesheet" href="styles.css?v=19">
 <link rel="icon" href="icon.png">
 </head>
 <body>
@@ -188,11 +188,14 @@
       <div class="section-tight reveal">
         <p class="label">02 · The script</p>
         <div id="scriptsTabs" class="chips" style="margin-bottom:16px"></div>
-        <div class="card doc-card">
-          <iframe id="scriptFrame" title="Cold call script" loading="lazy"></iframe>
+        <div id="scriptText"></div>
+        <div id="scriptDoc" hidden>
+          <div class="card doc-card">
+            <iframe id="scriptFrame" title="Cold call script" loading="lazy"></iframe>
+          </div>
+          <a id="scriptOpen" class="btn" target="_blank" rel="noopener">Open in Google Docs</a>
         </div>
-        <a id="scriptOpen" class="btn" target="_blank" rel="noopener">Open in Google Docs</a>
-        <p class="small t4" style="margin-top:14px">Owner pushing back? <a href="#" data-tab-link="objections">Drill the answers in Objections →</a></p>
+        <p class="small t4" style="margin-top:14px">Owner pushing back? <a href="#" data-tab-link="objections">Practice the answers in Call Training →</a></p>
       </div>
     </section>
 
@@ -397,6 +400,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=18"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>

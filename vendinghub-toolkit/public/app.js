@@ -52,15 +52,49 @@
     { title: "A real cold call, start to finish", sub: "What it actually sounds like when an owner picks up.", url: "" },
   ];
   // Cold Calling script(s): Google Docs shared "anyone with the link". More than one shows as tabs.
+  // A script is either `sections` (shown on the page) or `doc` (a Google Doc). Example for now.
   const SCRIPTS = [
-    { title: "Cold call script", doc: "1jgJ0UT-oixOo0gXzJIUnGb2nlOfceAEJ5Uibk0Gt4-A" },
+    { title: "Owner call", sections: [
+      ["1 · Ask for the owner", [
+        ["You", "Hey, is [owner's name] in?"],
+        ["Tip", "Use the name from Find the Owner. No name? Ask: \"Who's the owner or manager there? When are they usually in?\""]]],
+      ["2 · The opener", [
+        ["You", "Hey [name], this is [your name]. I don't know if we've met yet. I'm local here in [city] and I'll be quick."]]],
+      ["3 · The pitch", [
+        ["You", "I place Pokémon card vending machines in local businesses. It's wall-mounted, takes up almost no space, and it costs you nothing. I buy it, stock it and take care of it. You get a cut of every sale."],
+        ["You", "Your customers are already waiting around in there, and the kids love these. It's free money for the spot by your [register / door]."]]],
+      ["4 · Ask for the yes", [
+        ["You", "We'd start with a two-month trial. If it's not a fit, I pick it up, no hard feelings. Would you be open to trying it?"]]],
+      ["5 · They say yes: lock it in", [
+        ["You", "Awesome. How do you want to get paid? Check, deposit, cash, Venmo, Zelle?"],
+        ["You", "What's the best email for the agreement? I'll send it today. It takes two minutes to sign."],
+        ["You", "When's a good day and time for me to install it? [Say it back to them.] Perfect, see you [day] at [time]."]]],
+      ["6 · They push back", [
+        ["Tip", "Stay calm, don't argue. Use the answers you practiced in Call Training. Still a no? \"No problem. Mind if I check back in a couple of months?\" Then log it in My Leads."]]],
+    ] },
+    { title: "Front desk", sections: [
+      ["When someone else picks up", [
+        ["You", "Hi, is the owner in? I have a quick question for them."],
+        ["If they ask what it's about", "It's about a free Pokémon card machine for the store. No cost to them, I just need two minutes with whoever decides."],
+        ["If the owner isn't there", "No worries. What's their name, and when are they usually in? [Write it down in My Leads.]"],
+        ["Tip", "Don't pitch the person at the counter. They can't say yes. Getting the owner's name and best time is the win."]]],
+    ] },
+    { title: "Team doc", doc: "1jgJ0UT-oixOo0gXzJIUnGb2nlOfceAEJ5Uibk0Gt4-A" },
   ];
   // Supplier lists. Paste a Google Sheets link (shared "anyone with the link can view") into `sheet`.
   // An empty sheet shows "list coming soon".
+  // `rows` shows until a sheet is added: [name, what, minimum, ships, contact]. Cards and squishies are EXAMPLES.
   const SUPPLIERS = [
-    { key: "machines", title: "Machines", sub: "Card vending machines: full-size, countertop and wall-mount.", sheet: "" },
-    { key: "cards", title: "Pokémon cards", sub: "Sealed product to stock your machines: packs, boxes and bundles.", sheet: "" },
-    { key: "squishies", title: "Squishies", sub: "Squishies and other add-on products for your machines.", sheet: "" },
+    { key: "machines", title: "Machines", sub: "Card vending machines: full-size, countertop and wall-mount.", sheet: "", real: true },
+    { key: "cards", title: "Pokémon cards", sub: "Sealed product to stock your machines: packs, boxes and bundles.", sheet: "", rows: [
+      ["Example Card Wholesale Co.", "Booster packs, booster boxes, Elite Trainer Boxes", "1 case", "3–5 days", "orders@example.com"],
+      ["Example TCG Distributor", "Booster boxes and bundles, new sets on release day", "$500 order", "5–7 days", "(555) 010-2001"],
+      ["Example Local Card Shop (wholesale)", "Packs at a bulk price, pick up in person", "No minimum", "Same day", "(555) 010-2002"],
+    ] },
+    { key: "squishies", title: "Squishies", sub: "Squishies and other add-on products for your machines.", sheet: "", rows: [
+      ["Example Toy Supply", "Squishies, small toys, capsule toys", "100 pieces", "5–7 days", "sales@example.com"],
+      ["Example Novelty Wholesale", "Mixed squishy packs by theme", "$200 order", "3–5 days", "(555) 010-2003"],
+    ] },
   ];
   // Dwell Check: the "100 proven spots" list. Paste a Google Sheets link into `sheet`.
   const PROVEN_SPOTS = { sheet: "" };
@@ -70,13 +104,53 @@
   // Got a Yes: the placement agreement template (a Google Doc link) and the e-signature tool students
   // send it with (its name and a link). Empty shows "coming soon".
   const AGREEMENT = { doc: "", esignName: "", esignUrl: "" };
+  // Shown until `doc` is set. EXAMPLE ONLY: the team's real agreement replaces it.
+  const AGREEMENT_EXAMPLE = `VENDING MACHINE PLACEMENT AGREEMENT (EXAMPLE)
+
+This agreement is between [Your name / business] ("Operator") and [Business legal name] ("Location"), at [address].
+
+1. The machine. Operator places one [Pokémon card vending machine model] at the Location, in this spot: [e.g. by the front register]. The machine and everything in it belong to the Operator.
+
+2. Cost to the Location. Nothing. The Operator pays for the machine, the products, stocking, repairs and the card reader.
+
+3. Revenue share. The Location gets [X]% of the machine's net sales each month, paid by [check / deposit / Venmo / Zelle] by the [10th] of the next month. The Operator shares a sales report with each payment.
+
+4. What the Location provides. A standard power outlet within reach of the spot, and Wi-Fi (or the Operator uses a cellular reader). The Location keeps the machine in the agreed spot and lets the Operator in during business hours to restock and service it.
+
+5. Trial and term. A [60]-day trial starts on the install date. After that, it continues month to month.
+
+6. Ending it. Either side can end this agreement with [14] days' written notice (text or email is fine). The Operator removes the machine within [7] days at no cost to the Location.
+
+7. Damage and theft. The Operator is responsible for the machine and its contents. The Location tells the Operator right away if the machine is damaged, broken into, or not working.
+
+Signed:
+
+Operator: ____________________  Date: ________
+Location owner: ______________  Date: ________`;
   // Order a Machine: our supplier, the program discount code and the ordering steps (one string each).
-  const ORDERING = { supplier: "", url: "", code: "", loom: "", steps: [] };
-  // Skip & Trace team: how students reach them. Fill in what you have; empty fields are hidden.
+  const ORDERING = {
+    supplier: "VTM Vending", url: "https://vtmvending.com/collections/trading-card-vending-machines-tcg-kiosks", code: "GAGE", loom: "",
+    steps: [
+      "Pick your machine below. Not sure which one fits your spot? Ask Gage before you buy.",
+      "Open it on vtmvending.com and add it to your cart.",
+      "At checkout, type the code GAGE in the discount code box and press Apply. Check the price drops before you pay.",
+      "Pay in full, or call VTM about financing first (details below).",
+      "Ship it to your own address, not the store. You set it up and test it at home before the install.",
+      "Save the order confirmation and the tracking number. Then go to Set Up Machine while you wait.",
+    ],
+    // From vtmvending.com (October 2026). Prices change: the site is always right.
+    machines: [
+      { name: "Mini TCG", price: "$2,850", mount: "Wall-mount", screen: '21.5" touchscreen', aisles: "8 rows", packs: "About 120 packs", size: '21.6" wide × 33.3" tall × 8.7" deep', fit: "Small stores and tight walls.", url: "https://vtmvending.com/products/the-mini-tcg-compact-vending-kiosk-for-cards" },
+      { name: "Slim Wall TCG", price: "$3,550", mount: "Wall-mount", screen: '32" touchscreen', aisles: "10 rows", packs: "About 160 packs", size: '23.6" wide × 40.5" tall × 10.2" deep', fit: "Most gas stations, liquor stores and restaurants.", url: "https://vtmvending.com/products/slim-wall-tcg-vending" },
+      { name: "Mega Wall 2.0 TCG", price: "$4,250", mount: "Wall-mount", screen: '32" touchscreen', aisles: "15 rows", packs: "About 240 packs", size: '23.6" wide × 40.5" tall × 14" deep', fit: "Busy spots where a smaller machine would sell out fast.", url: "https://vtmvending.com/collections/trading-card-vending-machines-tcg-kiosks" },
+      { name: "Slim Pack Tower 2.0", price: "$5,000", mount: "Stands on the floor", screen: '43" touchscreen', aisles: "24 rows", packs: "Up to 456 packs", size: '33.5" wide × 72.8" tall × 23.2" deep', fit: "Big spots with floor space: bowling alleys, arcades, malls.", url: "https://vtmvending.com/products/slim-pack-tower-2-0-trading-card-vending-machine" },
+    ],
+  };
   // Gage Q&A page. loom: how to use Gage and ask good questions. phone: Gage's number.
   // chatApp: where the group chat lives (e.g. "iMessage", "WhatsApp"). chatName: what the group is called.
   const GAGE_QA = { loom: "", phone: "", chatApp: "", chatName: "" };
-  const SKIP_TRACE = { loom: "", email: "", phone: "", text: "", hours: "", turnaround: "" };
+  // Skip & Trace team: how students reach them. Fill in what you have; empty fields are hidden.
+  const SKIP_TRACE = { loom: "", email: "", phone: "+1 (555) 010-2468", text: "", hours: "", turnaround: "" };
   // Start Here: the welcome video every new student watches first (Loom share link).
   const ONBOARDING = { welcomeLoom: "" };
   // The video at the top of every page: what the page is for and how to use it (Loom share link).
@@ -1173,7 +1247,7 @@
     const agreement = docId(a.doc)
       ? `<div class="card doc-card"><iframe title="Placement agreement" loading="lazy" src="https://docs.google.com/document/d/${docId(a.doc)}/preview"></iframe></div>
          <div class="obj-actions" style="justify-content:flex-start"><a class="btn" target="_blank" rel="noopener" href="https://docs.google.com/document/d/${docId(a.doc)}/copy">Make my copy</a></div>`
-      : emptyCard("Coming soon", "Placement agreement", "The team's agreement template goes here. Make your own copy, fill in the owner's details and send it for e-signature.");
+      : `<p class="small t3" style="margin:0 0 10px">Example of what the agreement looks like. The team's real agreement replaces this. Fill in everything in [brackets].</p>${copyBlock(AGREEMENT_EXAMPLE, { label: "Example agreement" })}`;
     $("#yesBody").innerHTML =
       block("Before you hang up", `<div class="card">${stepList([
         ["Confirm the spot", "Where exactly it goes (by the door or register, where every customer sees it), and that there's an outlet and Wi-Fi."],
@@ -1201,11 +1275,33 @@
       : emptyCard("Coming soon", "Ordering steps", "Step by step: which machine to pick, where to enter the code, shipping and what to expect.");
     $("#orderBody").innerHTML =
       block("Your discount code", code) +
-      block(o.supplier ? `Order from ${esc(o.supplier)}` : "How to order", steps + (o.url ? `<a class="btn btn-primary" style="margin-top:14px" target="_blank" rel="noopener" href="${esc(o.url)}">Go to ${esc(o.supplier || "the supplier")} →</a>` : "")) +
-      block("Watch it done", `<div class="video-grid one">${videoCard({ title: "Ordering a machine, start to finish", sub: "", url: o.loom })}</div>`) +
+      block(o.supplier ? `How to order from ${esc(o.supplier)}` : "How to order", steps + (o.url ? `<a class="btn btn-primary" style="margin-top:14px" target="_blank" rel="noopener" href="${esc(o.url)}">Go to ${esc(o.supplier || "the supplier")} →</a>` : "")) +
+      (o.machines?.length ? block("Pick your machine", `<div class="machine-grid">${o.machines.map(machineCard).join("")}</div>
+        <p class="small t4" style="margin-top:12px">Prices as listed on vtmvending.com in October 2026, before the discount. They can change: the site is always right.</p>`) : "") +
+      block("Paying for it", `<div class="card">${stepList([
+        ["Pay in full at checkout", "Card at checkout on vtmvending.com. Use the code GAGE first."],
+        ["Or ask about financing", 'VTM says financing can start at 50% down for qualified buyers. Call them before you order: <a href="tel:+18883738158">(888) 373-8158</a>. Ask for the monthly payment and total cost in writing.'],
+        ["Don't pay twice for the card reader", "Ask VTM what reader comes with your machine and if setup is included. The Mini TCG comes with a Nayax card reader."],
+      ])}</div>`) +
+      block("Shipping", `<div class="card">${stepList([
+        ["Ships assembled from Ohio", "VTM ships from Cleveland, usually within 2 to 5 business days."],
+        ["Plan on 1 to 2 weeks", "Book the install for after it arrives and you've tested it, not before."],
+        ["Check it the day it arrives", "Look for damage before you sign for it. Take photos if anything's wrong and email VTM the same day."],
+      ])}</div>`) +
+      block("How your customers pay, and how you get paid", `<div class="card">${stepList([
+        ["Customers tap or insert a card", "The card reader takes credit and debit cards and phone tap-to-pay."],
+        ["The money goes to your bank", "The card reader company sends your sales to your bank account. Set up that account when you order, so the machine can take payments on install day."],
+        ["You pay the owner their share", "Each month, from the sales report. See Agreements for the details."],
+      ])}</div>`) +
       block("Need cards and squishies too?", `<p class="t3">Stock comes from our other suppliers. <a href="#" data-tab-link="suppliers">See suppliers →</a></p>`);
     observeReveals($("#orderBody"));
   }
+
+  const machineCard = (m) => `<div class="card machine-card">
+      <div class="machine-head"><p class="card-title">${esc(m.name)}</p><span class="machine-price">${esc(m.price)}</span></div>
+      <p class="small t3">${esc(m.fit)}</p>
+      <ul class="machine-specs">${[m.mount, m.screen, m.aisles, m.packs, m.size].map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+      <a class="btn btn-sm" target="_blank" rel="noopener" href="${esc(m.url)}">See it on VTM →</a></div>`;
 
   // =================================================================== SETUP & INSTALL
   const SETUP_CHECKS = [
@@ -1582,7 +1678,7 @@
         ? `<div class="card contact-card">${contacts.map(([k, v]) => k === "Hours" || k === "Turnaround" ? `<div class="contact-row"><span class="label">${k}</span><p class="t1">${esc(v)}</p></div>` : copyBlock(v, { label: k })).join("")}</div>`
         : emptyCard("Coming soon", "Team contact", "The team's email and phone number will be posted here.")) +
       block("How it works", `<div class="card">${stepList([
-        ["Save the spots you want to call", 'In <a href="#" data-tab-link="finder">Locations</a>, tick the places and tap <b>Save to My Leads</b>.'],
+        ["Save the spots you want to call", 'In <a href="#" data-tab-link="finder">Find Spots</a>, tick the places and tap <b>Save to My Leads</b>.'],
         ["Export them for the team", 'In <a href="#" data-tab-link="leads">My Leads</a>, select the leads and tap <b>Send to Skip &amp; Trace</b>. You get a spreadsheet file.'],
         ["Send the file to the team", "Email or text it to the contact above with the message below."],
         ["Get owner names and cell numbers back", `The team fills in the owner's name and cell for each spot${t.turnaround ? ` (usually ${esc(t.turnaround)})` : ""} and sends the file back.`],
@@ -1719,7 +1815,7 @@
     objections: ["Practice what to say when an owner says no or \"send me info\".", ["Read the list once.", "Press Flashcards: say your answer out loud, then check it.", "Do the Quiz until you get most right."]],
     analyzer: ["Get your calls graded by our AI coach inside Claude.", ["Follow the 5 steps once to connect it.", "Copy one of the prompts.", "Paste your call and send. You get a score and what to say next time."]],
     yes: ["What to do the moment an owner says yes.", ["Before you hang up, confirm the 4 things in the list.", "Send the agreement the same day.", "Copy the emails and send them at the right time."]],
-    order: ["Buy your machine the right way, with our discount.", ["Copy your discount code.", "Follow the ordering steps.", "Watch the video if you get stuck."]],
+    order: ["Buy your machine the right way, with our discount.", ["Watch the video above. It walks through the whole order.", "Pick your machine and copy the code GAGE.", "Follow the steps and order on vtmvending.com."]],
     suppliers: ["Where to get your machine, cards and squishies, and how much to order.", ["Pick a tab: Machines, Pokémon cards or Squishies.", "Use How much should I order? to get your number.", "Copy the message and send it to the supplier."]],
     setup: ["Get your machine from the box into the store.", ["Watch the 4 videos in order.", "Tick the checklist as you go.", "Send the owner a photo when it's installed."]],
     care: ["Keep your machine full, clean and working so it keeps making money.", ["Do the checklist every time you visit.", "Use the calculator to know how much to reorder.", "Something broken? Watch the fix-it video."]],
@@ -1799,7 +1895,7 @@
     for (const [tab, [what, steps]] of Object.entries(PAGE_HELP)) {
       const hero = $(`#tab-${tab} .hero`);
       if (!hero || $(`#tab-${tab} .help-box`)) continue;
-      const video = PAGE_VIDEOS[tab] || (tab === "gage" ? GAGE_QA.loom : tab === "skiptrace" ? SKIP_TRACE.loom : "");
+      const video = PAGE_VIDEOS[tab] || (tab === "gage" ? GAGE_QA.loom : tab === "skiptrace" ? SKIP_TRACE.loom : tab === "order" ? ORDERING.loom : "");
       // Video first (what the page is for and how to use it), then the same thing written down.
       hero.insertAdjacentHTML("afterend", `<div class="page-video"><p class="label">Watch first: what this page is for and how to use it</p>
         <div class="video-grid one">${videoCard({ title: `How to use ${TOOL_NAMES[tab]}`, sub: what, url: video })}</div></div><details class="card help-box" ${store.get("ic_help_seen", []).includes(tab) ? "" : "open"} data-help="${tab}">
@@ -2164,9 +2260,14 @@
     $$("#supplierTabs .chip").forEach((b) => b.addEventListener("click", () => renderSuppliers(b.dataset.sup)));
     const id = sheetId(s.sheet || "");
     const what = s.key === "machines" ? "vending machines" : s.title.toLowerCase();
-    $("#supplierBody").innerHTML = (id
-      ? sheetEmbed(s.sheet, `${s.title} suppliers`)
-      : emptyCard(s.title, "List coming soon", `${s.sub} The team is putting the spreadsheet together. It'll show up right here.`)) +
+    const list = id ? sheetEmbed(s.sheet, `${s.title} suppliers`)
+      : s.real ? `<p class="small t3" style="margin:0 0 10px">We order machines from <b>VTM Vending</b>. These are their Pokémon card machines.</p><div class="machine-grid">${ORDERING.machines.map(machineCard).join("")}</div>
+          <p class="small t4" style="margin-top:12px">Prices as listed on vtmvending.com in October 2026. <a href="#" data-tab-link="order">How to order, with the discount code →</a></p>`
+      : s.rows ? `<p class="small t3" style="margin:0 0 10px"><b>Example list.</b> These are not real suppliers. The team's spreadsheet replaces this.</p>
+          <div class="sup-list">${s.rows.map(([n, w, min, ship, c]) => `<div class="card sup-row"><div class="grow"><p class="card-title">${esc(n)}</p><p class="small t3">${esc(w)}</p></div>
+            <div class="sup-facts"><span><span class="label">Minimum</span>${esc(min)}</span><span><span class="label">Ships in</span>${esc(ship)}</span><span><span class="label">Contact</span>${esc(c)}</span></div></div>`).join("")}</div>`
+      : emptyCard(s.title, "List coming soon", `${s.sub} The team is putting the spreadsheet together. It'll show up right here.`);
+    $("#supplierBody").innerHTML = list +
       block("How to reach out and order", `<div class="card">${stepList([
         ["Pick a supplier from the list", "Start with the one the team marks as preferred."],
         ["Email or call them with the message below", "Mention the program if the list says there's a program deal."],
@@ -2188,9 +2289,20 @@
       ? SCRIPTS.map((x, j) => `<button class="chip ${j === i ? "active" : ""}" data-i="${j}">${esc(x.title)}</button>`).join("")
       : "";
     $$("#scriptsTabs .chip").forEach((b) => b.addEventListener("click", () => renderCalling(Number(b.dataset.i))));
-    const src = `https://docs.google.com/document/d/${s.doc}/preview`;
-    if ($("#scriptFrame").src !== src) $("#scriptFrame").src = src;
-    $("#scriptOpen").href = `https://docs.google.com/document/d/${s.doc}/edit?usp=sharing`;
+    const isDoc = Boolean(s.doc);
+    $("#scriptDoc").hidden = !isDoc;
+    $("#scriptText").hidden = isDoc;
+    if (isDoc) {
+      const src = `https://docs.google.com/document/d/${s.doc}/preview`;
+      if ($("#scriptFrame").src !== src) $("#scriptFrame").src = src;
+      $("#scriptOpen").href = `https://docs.google.com/document/d/${s.doc}/edit?usp=sharing`;
+    } else {
+      const plain = s.sections.map(([h, lines]) => `${h.toUpperCase()}\n${lines.map(([who, t]) => `${who}: ${t}`).join("\n")}`).join("\n\n");
+      $("#scriptText").innerHTML = `<p class="small t4" style="margin:0 0 10px">Example script. Say it in your own words. Fill in everything in [brackets].</p>
+        <div class="card script-card">${s.sections.map(([h, lines]) => `<div class="script-sec"><p class="script-h">${esc(h)}</p>${lines.map(([who, t]) =>
+          `<p class="script-line ${who === "Tip" ? "tip" : ""}"><span class="script-who">${esc(who)}</span><span>${esc(t)}</span></p>`).join("")}</div>`).join("")}</div>
+        <details class="card obj-item" style="margin-top:12px"><summary><span class="grow obj-q">Copy the whole script</span></summary>${copyBlock(plain)}</details>`;
+    }
   }
 
   // Sign in last: everything boot() touches is defined by now.
