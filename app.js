@@ -1,4 +1,4 @@
-/* VendingHub - Toolkit: dashboard, locations, dwell check, cold calling, objections, suppliers. */
+/* Pack Placement Student Hub: the road from zero to the first machine, and running it after. */
 (() => {
   "use strict";
 
@@ -66,7 +66,7 @@
   const PROVEN_SPOTS = { sheet: "" };
   // Call Analyzer: our Claude connector (MCP server). Paste its URL into `url`, and a Loom of the
   // setup into `loom`. Empty url shows "coming soon" in place of the URL.
-  const CLAUDE_CONNECTOR = { name: "VendingHub", url: "", loom: "" };
+  const CLAUDE_CONNECTOR = { name: "Pack Placement", url: "", loom: "" };
   // Got a Yes: the placement agreement template (a Google Doc link) and the e-signature tool students
   // send it with (its name and a link). Empty shows "coming soon".
   const AGREEMENT = { doc: "", esignName: "", esignUrl: "" };
@@ -270,7 +270,7 @@
     if (!TOOL_NAMES[name]) name = "dashboard";
     $$("[data-tab]", sidebar).forEach((b) => (b.dataset.tab === name ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
     $$(".tab-panel").forEach((p) => (p.hidden = p.id !== `tab-${name}`));
-    document.title = `${TOOL_NAMES[name]} · VendingHub - Toolkit`;
+    document.title = `${TOOL_NAMES[name]} · Pack Placement`;
     store.set("ic_tab", name);
     window.scrollTo(0, 0);
     // Replay the hero entrance for the page that just opened.
@@ -560,8 +560,8 @@
     const o = finder.origin;
     map.setView([o.lat, o.lng], 8); // the map needs a view before a circle can be projected onto it
     circleLayer = L.layerGroup([
-      L.circle([o.lat, o.lng], { radius: finder.radius * 1609.34, color: "#F5B301", weight: 1, fillOpacity: 0.03 }),
-      L.circleMarker([o.lat, o.lng], { radius: 7, color: "#fff", weight: 2, fillColor: "#F5B301", fillOpacity: 1 }).bindTooltip("You"),
+      L.circle([o.lat, o.lng], { radius: finder.radius * 1609.34, color: "#2FE3E6", weight: 1, fillOpacity: 0.03 }),
+      L.circleMarker([o.lat, o.lng], { radius: 7, color: "#fff", weight: 2, fillColor: "#2FE3E6", fillOpacity: 1 }).bindTooltip("You"),
     ]).addTo(map);
     requestAnimationFrame(fitMap);
   }
@@ -1136,13 +1136,13 @@
     const c = CLAUDE_CONNECTOR;
     const urlBox = c.url ? copyBlock(c.url, { label: "Connector URL" }) : `<div class="copy-block"><span class="label">Connector URL</span><p class="t3">Coming soon. The team will post it here.</p></div>`;
     $("#analyzerBody").innerHTML =
-      block("Watch first", `<div class="video-grid one">${videoCard({ title: "Connect Claude to VendingHub", sub: "Two minutes, once. Then it's always there.", url: c.loom })}</div>`) +
+      block("Watch first", `<div class="video-grid one">${videoCard({ title: "Connect Claude to Pack Placement", sub: "Two minutes, once. Then it's always there.", url: c.loom })}</div>`) +
       block("Connect it (one time)", `<div class="card">${stepList([
         ["Open Claude and sign in", 'Go to <a href="https://claude.ai" target="_blank" rel="noopener">claude.ai</a> or open the Claude app.'],
         ["Open Settings, then Connectors", "Choose <b>Add custom connector</b>."],
         [`Name it <b>${esc(c.name)}</b> and paste the URL below`, urlBox],
         ["Click Add, then Connect", "Sign in if it asks. If you don't see the option, tell the team which Claude plan you're on."],
-        ["Turn it on in a chat", "In a new chat, open the tools menu and make sure VendingHub is switched on."],
+        ["Turn it on in a chat", "In a new chat, open the tools menu and make sure Pack Placement is switched on."],
       ])}</div>`) +
       block("Then ask it", `<div class="prompt-grid">${ANALYZER_PROMPTS.map(([t, p]) => `<div class="card prompt-card"><p class="card-title">${esc(t)}</p>${copyBlock(p)}</div>`).join("")}</div>`);
     observeReveals($("#analyzerBody"));
@@ -1479,11 +1479,11 @@
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js");
     const doc = new window.jspdf.jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
     const W = doc.internal.pageSize.getWidth();
-    const gold = [245, 179, 1];
+    const gold = [47, 227, 230];
     // jsPDF's built-in font has no glyphs beyond Latin-1; swap the few typographic marks students paste.
     const clean = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/[^\x00-\xFF]/g, "");
-    doc.setFillColor(0, 0, 0); doc.rect(0, 0, W, 64, "F");
-    doc.setTextColor(...gold); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("VENDINGHUB  ·  MY LEADS", 36, 40);
+    doc.setFillColor(15, 19, 23); doc.rect(0, 0, W, 64, "F");
+    doc.setTextColor(...gold); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("PACK PLACEMENT  ·  MY LEADS", 36, 40);
     doc.setTextColor(200); doc.setFont("helvetica", "normal"); doc.setFontSize(9.5);
     doc.text(clean(`${profile?.name || ""}   ·   ${list.length} location${list.length === 1 ? "" : "s"}   ·   ${new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}`), W - 36, 40, { align: "right" });
     const counts = LEAD_STATUS.map((s) => [s.label, list.filter((l) => l.status === s.k).length]).filter(([, n]) => n);
@@ -1497,8 +1497,8 @@
         STATUS_BY[l.status]?.label || "", clean([l.owner, prettyPhone(l.ownerPhone)].filter(Boolean).join("\n")), fmtDate(l.followUp), "Open map"]),
       styles: { font: "helvetica", fontSize: 8.5, cellPadding: 5, textColor: 30, lineColor: 225, lineWidth: 0.5, overflow: "linebreak" },
       headStyles: { fillColor: [20, 20, 20], textColor: gold, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: [248, 246, 240] },
-      columnStyles: { 0: { cellWidth: 22, halign: "right", textColor: 140 }, 1: { cellWidth: 140, fontStyle: "bold" }, 2: { cellWidth: 70 }, 3: { cellWidth: 160 }, 4: { cellWidth: 74 }, 5: { cellWidth: 62 }, 6: { cellWidth: 82 }, 7: { cellWidth: 52 }, 8: { cellWidth: 58, textColor: [176, 120, 0], fontStyle: "bold" } },
+      alternateRowStyles: { fillColor: [240, 250, 251] },
+      columnStyles: { 0: { cellWidth: 22, halign: "right", textColor: 140 }, 1: { cellWidth: 140, fontStyle: "bold" }, 2: { cellWidth: 70 }, 3: { cellWidth: 160 }, 4: { cellWidth: 74 }, 5: { cellWidth: 62 }, 6: { cellWidth: 82 }, 7: { cellWidth: 52 }, 8: { cellWidth: 58, textColor: [0, 140, 150], fontStyle: "bold" } },
       didDrawCell: (d) => {
         if (d.section === "body" && d.column.index === 8) doc.link(d.cell.x, d.cell.y, d.cell.width, d.cell.height, { url: leadMaps(list[d.row.index]) });
       },
@@ -1508,7 +1508,7 @@
         doc.text("Tap \"Open map\" to see the place on Google Maps.", 36, doc.internal.pageSize.getHeight() - 20);
       },
     });
-    await saveFile(`vendinghub-leads-${new Date().toISOString().slice(0, 10)}.pdf`, doc.output("blob"));
+    await saveFile(`pack-placement-leads-${new Date().toISOString().slice(0, 10)}.pdf`, doc.output("blob"));
   }
 
   async function openLeads() {

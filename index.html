@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>VendingHub - Toolkit</title>
-<meta name="description" content="VendingHub - Toolkit: find spots, call owners, close, order, install and stay on trend.">
-<meta name="theme-color" content="#000000">
+<title>Pack Placement Student Hub</title>
+<meta name="description" content="Pack Placement Student Hub: everything you need to get your first vending machine placed.">
+<meta name="theme-color" content="#0F1317">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="styles.css?v=15">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23000'/%3E%3Crect x='18' y='10' width='28' height='44' rx='5' fill='none' stroke='%23F5B301' stroke-width='4'/%3E%3Crect x='24' y='17' width='16' height='14' rx='2' fill='%23F5B301'/%3E%3Ccircle cx='32' cy='43' r='4' fill='%23F5B301'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css?v=16">
+<link rel="icon" href="icon.png">
 </head>
 <body>
-<div class="demo-bar">Live demo. Places come live from OpenStreetMap (up to 40 miles). Your leads are saved in this browser.</div>
+<div class="demo-bar">Pack Placement Student Hub demo. Places come live from OpenStreetMap (up to 40 miles). Your leads are saved in this browser.</div>
 
 <!-- Ambient background: dot grid + soft vertical light rays (fixed, behind everything) -->
 <div class="ambient" aria-hidden="true">
@@ -26,8 +26,9 @@
 <section id="gate" class="gate glow-zone" hidden>
   <div class="glow" aria-hidden="true"></div>
   <div class="gate-inner">
-    <span class="badge">Inner circle</span>
-    <h1 class="hero-title">VendingHub <span class="gold">toolkit</span></h1>
+    <img class="gate-logo" src="logo.png" alt="Pack Placement">
+    <span class="badge">Student hub</span>
+    <h1 class="hero-title">Your road to your <span class="gold">first machine.</span></h1>
     <p class="hero-sub">Your location finder, cold calling playbook and suppliers, in one place. Enter the access code from your onboarding.</p>
     <div class="holo-border">
       <form id="gateForm" class="gate-form holo-inner">
@@ -53,7 +54,7 @@
 <!-- ============ APP ============ -->
 <div id="app" hidden>
   <aside id="sidebar" class="sidebar" aria-label="Main menu">
-    <div class="side-brand"><span class="wordmark">VendingHub <b>Toolkit</b></span></div>
+    <div class="side-brand"><img class="brand-logo" src="logo.png" alt="Pack Placement"><span class="side-sub">Student Hub</span></div>
     <nav class="side-nav">
       <button class="nav-item nav-start" data-tab="dashboard"><span class="nav-ico" aria-hidden="true">★</span>Start Here</button>
       <span class="label nav-label">Get your first machine</span>
@@ -373,11 +374,11 @@
 
   </main>
 
-  <footer class="footer">VendingHub - Toolkit · Inner circle only · Places data © Overture Maps &amp; OpenStreetMap</footer>
+  <footer class="footer">Pack Placement Student Hub · Students only · Places data © Overture Maps &amp; OpenStreetMap</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="adapter.js?v=15"></script>
-<script src="app.js?v=15"></script>
+<script src="adapter.js?v=16"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>
