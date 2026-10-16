@@ -213,6 +213,7 @@
     if (!finder.origin && profile?.home) setOrigin(profile.home);
     await Promise.all([loadDwell(), loadLeads()]);
     addPageHelp();
+    addPageNext();
     selectTab(store.get("ic_tab", "dashboard"));
   }
 
@@ -935,7 +936,7 @@
   }
 
   const VERDICT = {
-    green: { title: "Go get this wall.", badge: "ok", label: "Green light" },
+    green: { title: "Go get this spot.", badge: "ok", label: "Green light" },
     yellow: { title: "Check it first.", badge: "", label: "Worth a walk-in" },
     red: { title: "Skip it.", badge: "bad", label: "Red flag" },
   };
@@ -1646,7 +1647,8 @@
     { k: "machine", tab: "order", title: "Buy and set up your machine", how: "Order with our discount code, then follow Set Up Machine step by step. Mark the lead as Machine placed.", goal: 1, count: () => Math.max(leads.list.filter((l) => l.status === "placed").length, Number(profile?.machines) || 0) },
   ];
   const roadTicks = new Set(store.get("ic_road", []));
-  const stepDone = (s) => (s.manual ? roadTicks.has(s.k) : s.count() >= s.goal);
+  // No welcome video uploaded yet: don't send students to watch something that isn't there.
+  const stepDone = (s) => (s.manual ? roadTicks.has(s.k) || (s.k === "video" && !ONBOARDING.welcomeLoom) : s.count() >= s.goal);
 
   function renderDashboard() {
     const first = (profile?.name || "").split(/\s+/)[0] || "there";
@@ -1714,6 +1716,42 @@
     care: ["Keep your machine full, clean and working so it keeps making money.", ["Do the checklist every time you visit.", "Use the calculator to know how much to reorder.", "Something broken? Watch the fix-it video."]],
     trends: ["What's selling right now, from our team every week.", ["Read the newest post at the top.", "Use it when you restock.", "Check back every week."]],
   };
+  // "What's next" button at the bottom of each page, so nobody has to guess where to go.
+  const PAGE_NEXT = {
+    finder: ["dwell", "Check your best spots before you call them."],
+    dwell: ["leads", "See every spot you saved, in one list."],
+    leads: ["skiptrace", "Get the owner's name and cell number."],
+    skiptrace: ["calling", "Learn exactly what to say on the call."],
+    calling: ["objections", "Practice what to say when they push back."],
+    objections: ["leads", "Start calling. Update each spot after the call."],
+    analyzer: ["yes", "What to do the moment an owner says yes."],
+    yes: ["order", "Buy your machine with the program discount."],
+    order: ["setup", "Get it from the box into the store."],
+    suppliers: ["care", "Load it, restock it and keep it working."],
+    setup: ["care", "Keep it full, clean and selling."],
+    care: ["trends", "See what's selling before you restock."],
+    trends: ["dashboard", "Back to your road and your next step."],
+  };
+  const GLOSSARY = [
+    ["Spot / location", "A business where your machine could go: a gas station, bowling alley, restaurant..."],
+    ["Placement", "Getting an owner to say yes and putting your machine in their store."],
+    ["Foot traffic", "How many people walk in. More people, more sales."],
+    ["Dwell time", "How long people stay inside. People who wait around buy more."],
+    ["Revenue share", "The cut of sales you give the owner, usually 10 to 20%. No rent."],
+    ["Skip trace", "Finding the owner's real name and cell number, so you skip the front desk."],
+    ["Pushback / objection", "When the owner says \"not interested\" or \"send me info\". You'll practice these."],
+    ["Restock", "Refilling the machine with cards and products."],
+    ["Gage", "The coach behind this program. Every rule on this site comes from his own machines."],
+  ];
+  function addPageNext() {
+    for (const [tab, [to, why]] of Object.entries(PAGE_NEXT)) {
+      const panel = $(`#tab-${tab}`);
+      if (!panel || $(".page-next", panel)) continue;
+      panel.insertAdjacentHTML("beforeend", `<div class="card page-next"><div class="grow"><span class="label">When you're done here</span><p class="page-next-title">Next: ${esc(TOOL_NAMES[to])}</p><p class="small t3">${esc(why)}</p></div><button class="btn btn-primary" data-tab-link="${to}">Go →</button></div>`);
+    }
+    const g = $("#gloss");
+    if (g && !g.childElementCount) g.innerHTML = GLOSSARY.map(([w, d]) => `<div class="gloss-item"><b>${esc(w)}</b><span class="small t3">${esc(d)}</span></div>`).join("");
+  }
   function addPageHelp() {
     for (const [tab, [what, steps]] of Object.entries(PAGE_HELP)) {
       const hero = $(`#tab-${tab} .hero`);
