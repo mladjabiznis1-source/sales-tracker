@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit .dev.vars.
+LINKEDIN_CLIENT_ID=
+LINKEDIN_CLIENT_SECRET=
+ADMIN_PASSWORD=
+TOKEN_ENCRYPTION_KEY=
+PUBLIC_URL=http://localhost:8787

@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "postline",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  // global_fetch_strictly_public: required by the OAuth library for Client ID Metadata Documents.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "triggers": { "crons": ["* * * * *"] },
+  "vars": {
+    // Set after the first deploy prints your URL, e.g. https://postline.<subdomain>.workers.dev
+    "PUBLIC_URL": "https://postline.REPLACE-ME.workers.dev",
+    // LinkedIn API version (YYYYMM). Each version is supported for ~1 year; bump yearly.
+    "LINKEDIN_VERSION": "202609"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "postline",
+      "database_id": "REPLACE-WITH-ID-FROM-wrangler-d1-create",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    { "binding": "OAUTH_KV", "id": "REPLACE-WITH-ID-FROM-wrangler-kv-namespace-create" }
+  ],
+  "observability": { "enabled": true }
+}
